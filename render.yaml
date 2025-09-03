@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: construction-backend
+    env: node
+    plan: free
+    buildCommand: cd backend && npm ci --include=dev && npx prisma generate && npm run build:full
+    startCommand: cd backend && npx prisma db push && node dist/src/main.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NPM_CONFIG_PRODUCTION
+        value: "false"
+      - key: PORT
+        value: 3000
+      - key: DATABASE_URL
+        value: file:/tmp/dev.db
+    autoDeploy: true
