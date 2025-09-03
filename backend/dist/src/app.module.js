@@ -19,6 +19,8 @@ const materials_module_1 = require("./materials/materials.module");
 const treasury_module_1 = require("./treasury/treasury.module");
 const settlements_module_1 = require("./settlements/settlements.module");
 const reports_module_1 = require("./reports/reports.module");
+const serve_static_1 = require("@nestjs/serve-static");
+const path_1 = require("path");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -27,6 +29,10 @@ exports.AppModule = AppModule = __decorate([
         imports: [
             config_1.ConfigModule.forRoot({ isGlobal: true }),
             prisma_module_1.PrismaModule,
+            serve_static_1.ServeStaticModule.forRoot({
+                rootPath: (0, path_1.join)(__dirname, '..', 'public'),
+                serveRoot: '/app',
+            }),
             projects_module_1.ProjectsModule,
             suppliers_module_1.SuppliersModule,
             phases_module_1.PhasesModule,
