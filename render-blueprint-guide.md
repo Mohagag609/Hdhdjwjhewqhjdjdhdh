@@ -24,7 +24,7 @@
 
 #### 3. قاعدة البيانات (treasury-postgres)
 - **النوع**: Managed PostgreSQL
-- **الخطة**: Starter
+- **الخطة**: Free
 - **الاسم**: treasury_db
 - **المستخدم**: treasury_user
 

@@ -3,7 +3,7 @@ services:
   - type: web
     name: treasury-backend
     env: node
-    plan: starter
+    plan: free
     buildCommand: cd backend && npm ci --only=production
     startCommand: cd backend && npm start
     healthCheckPath: /health
@@ -32,6 +32,7 @@ services:
   - type: web
     name: treasury-frontend
     env: static
+    plan: free
     buildCommand: cd frontend && npm ci && npm run build
     staticPublishPath: ./frontend/build
     routes:
@@ -51,6 +52,6 @@ services:
 
 databases:
   - name: treasury-postgres
-    plan: starter
+    plan: free
     databaseName: treasury_db
     user: treasury_user

@@ -32,20 +32,20 @@ git push origin main
 
 #### قاعدة البيانات (PostgreSQL)
 - **النوع**: Managed PostgreSQL
-- **الخطة**: Starter (مجانية)
+- **الخطة**: Free (مجانية)
 - **الاسم**: treasury-postgres
 
 #### الخادم الخلفي (Backend)
 - **النوع**: Web Service
 - **البيئة**: Node.js
-- **الخطة**: Starter (مجانية)
+- **الخطة**: Free (مجانية)
 - **الاسم**: treasury-backend
 - **المنفذ**: 10000
 
 #### الواجهة الأمامية (Frontend)
 - **النوع**: Static Site
 - **البيئة**: Static
-- **الخطة**: Starter (مجانية)
+- **الخطة**: Free (مجانية)
 - **الاسم**: treasury-frontend
 
 ### 📊 مراقبة الأداء
