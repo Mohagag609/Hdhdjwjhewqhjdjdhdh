@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { BrowserRouter, Link, Route, Routes, useNavigate } from 'react-router-dom'
 import { api, type Project } from './lib/api'
 import './App.css'
+import ProjectPage from './pages/ProjectPage'
 
 function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([])
@@ -45,6 +46,7 @@ function App() {
       </nav>
       <Routes>
         <Route path="/" element={<ProjectsPage/>} />
+        <Route path="/projects/:id" element={<ProjectPage/>} />
       </Routes>
     </BrowserRouter>
   )
