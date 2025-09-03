@@ -24,7 +24,7 @@ let SuppliersService = class SuppliersService {
         return this.prisma.supplier.findMany({ orderBy: { id: 'desc' } });
     }
     async ensureByName(name) {
-        const existing = await this.prisma.supplier.findUnique({ where: { name } });
+        const existing = await this.prisma.supplier.findFirst({ where: { name } });
         if (existing)
             return existing;
         return this.create(name);

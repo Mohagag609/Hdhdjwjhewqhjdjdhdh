@@ -20,16 +20,22 @@ const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
 class ReceiptDto {
     partnerId;
+    partnerName;
     amount;
     date;
     method;
     reference;
 }
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_transformer_1.Type)(() => Number),
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], ReceiptDto.prototype, "partnerId", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], ReceiptDto.prototype, "partnerName", void 0);
 __decorate([
     (0, class_transformer_1.Type)(() => Number),
     (0, class_validator_1.IsNumber)(),
@@ -50,6 +56,7 @@ __decorate([
 ], ReceiptDto.prototype, "reference", void 0);
 class PaymentDto {
     supplierId;
+    supplierName;
     amount;
     phaseId;
     materialItemId;
@@ -58,10 +65,15 @@ class PaymentDto {
     reference;
 }
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_transformer_1.Type)(() => Number),
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], PaymentDto.prototype, "supplierId", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], PaymentDto.prototype, "supplierName", void 0);
 __decorate([
     (0, class_transformer_1.Type)(() => Number),
     (0, class_validator_1.IsNumber)(),

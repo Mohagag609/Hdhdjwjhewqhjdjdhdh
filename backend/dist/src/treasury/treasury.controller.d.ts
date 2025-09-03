@@ -1,13 +1,15 @@
 import { TreasuryService } from './treasury.service';
 declare class ReceiptDto {
-    partnerId: number;
+    partnerId?: number;
+    partnerName?: string;
     amount: number;
     date?: string;
     method?: string;
     reference?: string;
 }
 declare class PaymentDto {
-    supplierId: number;
+    supplierId?: number;
+    supplierName?: string;
     amount: number;
     phaseId?: number;
     materialItemId?: number;
@@ -23,75 +25,75 @@ export declare class TreasuryController {
     }>;
     list(projectId: number): Promise<({
         partner: {
+            id: number;
             name: string;
             createdAt: Date;
-            id: number;
-        } | null;
-        phase: {
-            name: string;
-            createdAt: Date;
-            id: number;
-            projectId: number;
-            plannedAmount: import("@prisma/client/runtime/library").Decimal | null;
         } | null;
         supplier: {
+            id: number;
             name: string;
             createdAt: Date;
+        } | null;
+        phase: {
+            projectId: number;
             id: number;
+            name: string;
+            createdAt: Date;
+            plannedAmount: import("@prisma/client/runtime/library").Decimal | null;
         } | null;
         material: {
+            projectId: number;
+            id: number;
+            supplierId: number;
+            phaseId: number;
             name: string;
             createdAt: Date;
-            id: number;
-            projectId: number;
             quantity: import("@prisma/client/runtime/library").Decimal;
             unit: string | null;
             unitPrice: import("@prisma/client/runtime/library").Decimal;
             total: import("@prisma/client/runtime/library").Decimal;
-            phaseId: number;
-            supplierId: number;
         } | null;
     } & {
-        id: number;
         projectId: number;
-        partnerId: number | null;
-        phaseId: number | null;
-        supplierId: number | null;
         direction: import("@prisma/client").$Enums.Direction;
         amount: import("@prisma/client/runtime/library").Decimal;
+        id: number;
+        partnerId: number | null;
+        supplierId: number | null;
+        phaseId: number | null;
+        materialItemId: number | null;
         txDate: Date;
         reference: string | null;
         method: string | null;
         notes: string | null;
-        materialItemId: number | null;
     })[]>;
     receipt(projectId: number, dto: ReceiptDto): Promise<{
-        id: number;
         projectId: number;
-        partnerId: number | null;
-        phaseId: number | null;
-        supplierId: number | null;
         direction: import("@prisma/client").$Enums.Direction;
         amount: import("@prisma/client/runtime/library").Decimal;
+        id: number;
+        partnerId: number | null;
+        supplierId: number | null;
+        phaseId: number | null;
+        materialItemId: number | null;
         txDate: Date;
         reference: string | null;
         method: string | null;
         notes: string | null;
-        materialItemId: number | null;
     }>;
     payment(projectId: number, dto: PaymentDto): Promise<{
-        id: number;
         projectId: number;
-        partnerId: number | null;
-        phaseId: number | null;
-        supplierId: number | null;
         direction: import("@prisma/client").$Enums.Direction;
         amount: import("@prisma/client/runtime/library").Decimal;
+        id: number;
+        partnerId: number | null;
+        supplierId: number | null;
+        phaseId: number | null;
+        materialItemId: number | null;
         txDate: Date;
         reference: string | null;
         method: string | null;
         notes: string | null;
-        materialItemId: number | null;
     }>;
 }
 export {};

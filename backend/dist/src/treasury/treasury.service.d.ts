@@ -6,70 +6,72 @@ export declare class TreasuryService {
     getBalance(projectId: number): Promise<Prisma.Decimal>;
     list(projectId: number): Promise<({
         partner: {
+            id: number;
             name: string;
             createdAt: Date;
-            id: number;
-        } | null;
-        phase: {
-            name: string;
-            createdAt: Date;
-            id: number;
-            projectId: number;
-            plannedAmount: Prisma.Decimal | null;
         } | null;
         supplier: {
+            id: number;
             name: string;
             createdAt: Date;
+        } | null;
+        phase: {
+            projectId: number;
             id: number;
+            name: string;
+            createdAt: Date;
+            plannedAmount: Prisma.Decimal | null;
         } | null;
         material: {
+            projectId: number;
+            id: number;
+            supplierId: number;
+            phaseId: number;
             name: string;
             createdAt: Date;
-            id: number;
-            projectId: number;
             quantity: Prisma.Decimal;
             unit: string | null;
             unitPrice: Prisma.Decimal;
             total: Prisma.Decimal;
-            phaseId: number;
-            supplierId: number;
         } | null;
     } & {
-        id: number;
         projectId: number;
-        partnerId: number | null;
-        phaseId: number | null;
-        supplierId: number | null;
         direction: import("@prisma/client").$Enums.Direction;
         amount: Prisma.Decimal;
+        id: number;
+        partnerId: number | null;
+        supplierId: number | null;
+        phaseId: number | null;
+        materialItemId: number | null;
         txDate: Date;
         reference: string | null;
         method: string | null;
         notes: string | null;
-        materialItemId: number | null;
     })[]>;
     receipt(projectId: number, dto: {
-        partnerId: number;
+        partnerId?: number;
+        partnerName?: string;
         amount: number;
         date?: string;
         method?: string;
         reference?: string;
     }): Promise<{
-        id: number;
         projectId: number;
-        partnerId: number | null;
-        phaseId: number | null;
-        supplierId: number | null;
         direction: import("@prisma/client").$Enums.Direction;
         amount: Prisma.Decimal;
+        id: number;
+        partnerId: number | null;
+        supplierId: number | null;
+        phaseId: number | null;
+        materialItemId: number | null;
         txDate: Date;
         reference: string | null;
         method: string | null;
         notes: string | null;
-        materialItemId: number | null;
     }>;
     payment(projectId: number, dto: {
-        supplierId: number;
+        supplierId?: number;
+        supplierName?: string;
         amount: number;
         phaseId?: number;
         materialItemId?: number;
@@ -77,17 +79,17 @@ export declare class TreasuryService {
         method?: string;
         reference?: string;
     }): Promise<{
-        id: number;
         projectId: number;
-        partnerId: number | null;
-        phaseId: number | null;
-        supplierId: number | null;
         direction: import("@prisma/client").$Enums.Direction;
         amount: Prisma.Decimal;
+        id: number;
+        partnerId: number | null;
+        supplierId: number | null;
+        phaseId: number | null;
+        materialItemId: number | null;
         txDate: Date;
         reference: string | null;
         method: string | null;
         notes: string | null;
-        materialItemId: number | null;
     }>;
 }

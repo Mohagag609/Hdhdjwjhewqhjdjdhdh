@@ -5,9 +5,13 @@ import { IsDateString, IsNotEmpty, IsNumber, IsOptional } from 'class-validator'
 import { Type } from 'class-transformer';
 
 class ReceiptDto {
+  @IsOptional()
   @Type(() => Number)
   @IsNumber()
-  partnerId!: number;
+  partnerId?: number;
+
+  @IsOptional()
+  partnerName?: string;
 
   @Type(() => Number)
   @IsNumber()
@@ -25,9 +29,13 @@ class ReceiptDto {
 }
 
 class PaymentDto {
+  @IsOptional()
   @Type(() => Number)
   @IsNumber()
-  supplierId!: number;
+  supplierId?: number;
+
+  @IsOptional()
+  supplierName?: string;
 
   @Type(() => Number)
   @IsNumber()

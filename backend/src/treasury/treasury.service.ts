@@ -31,19 +31,24 @@ export class TreasuryService {
   }
 
   async receipt(projectId: number, dto: {
-    partnerId: number;
+    partnerId?: number;
+    partnerName?: string;
     amount: number;
     date?: string;
     method?: string;
     reference?: string;
   }) {
     // ensure partner and project
-    const [project, partner] = await Promise.all([
-      this.prisma.project.findUnique({ where: { id: projectId } }),
-      this.prisma.partner.findUnique({ where: { id: dto.partnerId } }),
-    ]);
+    const project = await this.prisma.project.findUnique({ where: { id: projectId } });
     if (!project) throw new NotFoundException('Project not found');
-    if (!partner) throw new NotFoundException('Partner not found');
+
+    let partnerId = dto.partnerId;
+    if (!partnerId && dto.partnerName) {
+      const p = await this.prisma.partner.findFirst({ where: { name: dto.partnerName } });
+      if (!p) throw new NotFoundException('Partner not found');
+      partnerId = p.id;
+    }
+    if (!partnerId) throw new NotFoundException('Partner not specified');
     if (dto.amount <= 0) throw new BadRequestException('Amount must be > 0');
 
     return this.prisma.treasuryTransaction.create({
@@ -54,13 +59,14 @@ export class TreasuryService {
         txDate: dto.date ? new Date(dto.date) : undefined,
         method: dto.method,
         reference: dto.reference,
-        partnerId: partner.id,
+        partnerId,
       },
     });
   }
 
   async payment(projectId: number, dto: {
-    supplierId: number;
+    supplierId?: number;
+    supplierName?: string;
     amount: number;
     phaseId?: number;
     materialItemId?: number;
@@ -72,8 +78,13 @@ export class TreasuryService {
     const project = await this.prisma.project.findUnique({ where: { id: projectId } });
     if (!project) throw new NotFoundException('Project not found');
 
-    const supplier = await this.prisma.supplier.findUnique({ where: { id: dto.supplierId } });
-    if (!supplier) throw new NotFoundException('Supplier not found');
+    let supplierId = dto.supplierId;
+    if (!supplierId && dto.supplierName) {
+      const s = await this.prisma.supplier.findFirst({ where: { name: dto.supplierName } });
+      if (!s) throw new NotFoundException('Supplier not found');
+      supplierId = s.id;
+    }
+    if (!supplierId) throw new NotFoundException('Supplier not specified');
 
     if (dto.phaseId) {
       const phase = await this.prisma.phase.findFirst({ where: { id: dto.phaseId, projectId } });
@@ -98,7 +109,7 @@ export class TreasuryService {
         txDate: dto.date ? new Date(dto.date) : undefined,
         method: dto.method,
         reference: dto.reference,
-        supplierId: dto.supplierId,
+        supplierId,
         phaseId: dto.phaseId,
         materialItemId: dto.materialItemId,
       },

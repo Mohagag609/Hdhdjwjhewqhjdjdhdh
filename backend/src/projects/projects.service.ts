@@ -43,11 +43,8 @@ export class ProjectsService {
       await tx.projectPartner.deleteMany({ where: { projectId } });
 
       for (const it of items) {
-        const partner = await tx.partner.upsert({
-          where: { name: it.name },
-          update: {},
-          create: { name: it.name },
-        });
+        const existing = await tx.partner.findFirst({ where: { name: it.name } });
+        const partner = existing ?? (await tx.partner.create({ data: { name: it.name } }));
         await tx.projectPartner.create({
           data: {
             projectId,

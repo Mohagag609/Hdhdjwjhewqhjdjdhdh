@@ -14,7 +14,7 @@ export class SuppliersService {
   }
 
   async ensureByName(name: string) {
-    const existing = await this.prisma.supplier.findUnique({ where: { name } });
+    const existing = await this.prisma.supplier.findFirst({ where: { name } });
     if (existing) return existing;
     return this.create(name);
   }
