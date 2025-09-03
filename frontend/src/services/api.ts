@@ -14,7 +14,7 @@ import {
   TrendData,
   UserActivity,
   PaginatedResponse
-} from '../types';
+} from 'types';
 
 class ApiService {
   private api: AxiosInstance;

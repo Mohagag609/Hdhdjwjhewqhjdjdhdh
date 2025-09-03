@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Treasury, Transaction, FinancialSummary } from '../types';
-import apiService from '../services/api';
+import { Treasury, Transaction, FinancialSummary } from 'types';
+import apiService from 'services/api';
 
 interface TreasuryContextType {
   treasuries: Treasury[];

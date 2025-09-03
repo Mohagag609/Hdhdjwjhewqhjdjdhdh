@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Treasury, TransactionFormData, TransferFormData } from '../../types';
+import { Treasury, TransactionFormData, TransferFormData } from 'types';
 import { X, AlertCircle, CheckCircle } from 'lucide-react';
-import apiService from '../../services/api';
+import apiService from 'services/api';
 
 interface TransactionModalProps {
   isOpen: boolean;

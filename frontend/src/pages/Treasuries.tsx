@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Treasury, TreasuryFormData } from '../../types';
-import apiService from '../../services/api';
-import { useTreasury } from '../contexts/TreasuryContext';
+import { Treasury, TreasuryFormData } from 'types';
+import apiService from 'services/api';
+import { useTreasury } from 'contexts/TreasuryContext';
 import { 
   Plus, 
   Edit, 
