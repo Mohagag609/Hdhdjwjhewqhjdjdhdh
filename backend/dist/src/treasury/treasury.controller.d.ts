@@ -24,43 +24,43 @@ export declare class TreasuryController {
         treasuryBalance: number;
     }>;
     list(projectId: number): Promise<({
-        partner: {
-            id: number;
-            name: string;
-            createdAt: Date;
-        } | null;
-        supplier: {
-            id: number;
-            name: string;
-            createdAt: Date;
-        } | null;
         phase: {
-            projectId: number;
-            id: number;
             name: string;
             createdAt: Date;
+            id: number;
+            projectId: number;
             plannedAmount: import("@prisma/client/runtime/library").Decimal | null;
         } | null;
-        material: {
-            projectId: number;
-            id: number;
-            supplierId: number;
-            phaseId: number;
+        partner: {
             name: string;
             createdAt: Date;
+            id: number;
+        } | null;
+        supplier: {
+            name: string;
+            createdAt: Date;
+            id: number;
+        } | null;
+        material: {
+            name: string;
+            createdAt: Date;
+            id: number;
+            projectId: number;
             quantity: import("@prisma/client/runtime/library").Decimal;
             unit: string | null;
             unitPrice: import("@prisma/client/runtime/library").Decimal;
             total: import("@prisma/client/runtime/library").Decimal;
+            phaseId: number;
+            supplierId: number;
         } | null;
     } & {
+        id: number;
         projectId: number;
+        partnerId: number | null;
+        phaseId: number | null;
+        supplierId: number | null;
         direction: import("@prisma/client").$Enums.Direction;
         amount: import("@prisma/client/runtime/library").Decimal;
-        id: number;
-        partnerId: number | null;
-        supplierId: number | null;
-        phaseId: number | null;
         materialItemId: number | null;
         txDate: Date;
         reference: string | null;
@@ -68,13 +68,13 @@ export declare class TreasuryController {
         notes: string | null;
     })[]>;
     receipt(projectId: number, dto: ReceiptDto): Promise<{
+        id: number;
         projectId: number;
+        partnerId: number | null;
+        phaseId: number | null;
+        supplierId: number | null;
         direction: import("@prisma/client").$Enums.Direction;
         amount: import("@prisma/client/runtime/library").Decimal;
-        id: number;
-        partnerId: number | null;
-        supplierId: number | null;
-        phaseId: number | null;
         materialItemId: number | null;
         txDate: Date;
         reference: string | null;
@@ -82,13 +82,13 @@ export declare class TreasuryController {
         notes: string | null;
     }>;
     payment(projectId: number, dto: PaymentDto): Promise<{
+        id: number;
         projectId: number;
+        partnerId: number | null;
+        phaseId: number | null;
+        supplierId: number | null;
         direction: import("@prisma/client").$Enums.Direction;
         amount: import("@prisma/client/runtime/library").Decimal;
-        id: number;
-        partnerId: number | null;
-        supplierId: number | null;
-        phaseId: number | null;
         materialItemId: number | null;
         txDate: Date;
         reference: string | null;
