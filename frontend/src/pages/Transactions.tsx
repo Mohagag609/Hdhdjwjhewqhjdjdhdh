@@ -41,7 +41,7 @@ const Transactions: React.FC = () => {
         setTransactions(response.data.transactions || []);
         setPagination(response.data.pagination || pagination);
       } else {
-        setError(response.message || 'فشل في جلب المعاملات');
+        setError('فشل في جلب المعاملات');
       }
     } catch (err: any) {
       setError(err.message || 'خطأ في جلب المعاملات');

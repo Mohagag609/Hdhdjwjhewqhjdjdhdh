@@ -63,7 +63,7 @@ export const TreasuryProvider: React.FC<TreasuryProviderProps> = ({ children }) 
       if (response.success && response.data) {
         setTransactions(response.data.transactions || []);
       } else {
-        setError(response.message || 'فشل في جلب المعاملات');
+        setError('فشل في جلب المعاملات');
       }
     } catch (error: any) {
       setError(error.message || 'خطأ في جلب المعاملات');
