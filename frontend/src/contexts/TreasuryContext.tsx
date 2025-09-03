@@ -61,7 +61,7 @@ export const TreasuryProvider: React.FC<TreasuryProviderProps> = ({ children }) 
       const response = await apiService.getTransactions({ limit: 50 });
       
       if (response.success && response.data) {
-        setTransactions(response.data.transactions || []);
+        setTransactions((response.data.transactions as Transaction[]) || []);
       } else {
         setError('فشل في جلب المعاملات');
       }

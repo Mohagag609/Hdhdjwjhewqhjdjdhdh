@@ -43,8 +43,8 @@ const Transactions: React.FC = () => {
       const response = await apiService.getTransactions(apiFilters);
       
       if (response.success && response.data) {
-        setTransactions(response.data.transactions || []);
-        setPagination(response.data.pagination || pagination);
+        setTransactions((response.data.transactions as Transaction[]) || []);
+        setPagination((response.data.pagination as PaginationData) || pagination);
       } else {
         setError('فشل في جلب المعاملات');
       }
