@@ -11,7 +11,7 @@ export default function ProjectPage() {
   const projectId = Number(id)
   const [project, setProject] = useState<any>(null)
   const [balance, setBalance] = useState<number>(0)
-  const [tab, setTab] = useState<'partners' | 'phases' | 'materials' | 'treasury' | 'settlement'>('partners')
+  const [tab, setTab] = useState<'partners' | 'phases' | 'materials' | 'treasury' | 'settlement' | 'reports'>('partners')
   const [error, setError] = useState<string>('')
 
   // partners state
@@ -43,6 +43,11 @@ export default function ProjectPage() {
   const [settlementPhaseId, setSettlementPhaseId] = useState<number | ''>('')
   const [settlementRows, setSettlementRows] = useState<any[]>([])
 
+  // reports
+  const [treasurySummary, setTreasurySummary] = useState<{incoming:number; outgoing:number; balance:number} | null>(null)
+  const [reportPhaseId, setReportPhaseId] = useState<number | ''>('')
+  const [suppliersReport, setSuppliersReport] = useState<Array<{supplierId:number|null; supplierName:string|null; paid:number}>>([])
+
   const refreshProject = async () => {
     const res = await api.get(`/projects/${projectId}`)
     setProject(res.data)
@@ -56,6 +61,11 @@ export default function ProjectPage() {
     setBalance(res.data.treasuryBalance)
   }
 
+  const refreshTreasurySummary = async () => {
+    const res = await api.get(`/projects/${projectId}/reports/treasury`)
+    setTreasurySummary(res.data)
+  }
+
   const refreshTransactions = async () => {
     const res = await api.get(`/projects/${projectId}/treasury/transactions`)
     setTransactions(res.data)
@@ -64,7 +74,7 @@ export default function ProjectPage() {
   useEffect(() => {
     if (!projectId) return
     setError('')
-    Promise.all([refreshProject(), refreshBalance(), refreshTransactions()]).catch((e) => setError(String(e)))
+    Promise.all([refreshProject(), refreshBalance(), refreshTransactions(), refreshTreasurySummary()]).catch((e) => setError(String(e)))
   }, [projectId])
 
   // partners tab handlers
@@ -136,6 +146,12 @@ export default function ProjectPage() {
     setSettlementRows(res.data)
   }
 
+  // reports
+  const loadSuppliersReport = async () => {
+    const res = await api.get(`/projects/${projectId}/reports/suppliers`, { params: { phaseId: reportPhaseId || undefined } })
+    setSuppliersReport(res.data)
+  }
+
   return (
     <div className="container">
       <h2>مشروع #{projectId} {project?.name ? `- ${project.name}` : ''}</h2>
@@ -144,9 +160,9 @@ export default function ProjectPage() {
         <strong>رصيد الخزينة:</strong>&nbsp;{balance.toLocaleString()}
       </div>
       <div className="tabs">
-        {(['partners','phases','materials','treasury','settlement'] as const).map(t => (
+        {(['partners','phases','materials','treasury','settlement','reports'] as const).map(t => (
           <button key={t} className={tab===t? 'active':''} onClick={() => setTab(t)}>{
-            t==='partners'?'الشركاء': t==='phases'?'المراحل': t==='materials'?'البنود': t==='treasury'?'الخزينة':'التسوية'
+            t==='partners'?'الشركاء': t==='phases'?'المراحل': t==='materials'?'البنود': t==='treasury'?'الخزينة': t==='settlement'?'التسوية':'التقارير'
           }</button>
         ))}
       </div>
@@ -295,6 +311,38 @@ export default function ProjectPage() {
                   <td>{r.amountPaidToDate}</td>
                   <td>{r.delta}</td>
                   <td>{r.settlementStatus}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {tab==='reports' && (
+        <div>
+          <h3>التقارير</h3>
+          <div className="row">
+            <strong>ملخص الخزينة:</strong>
+            <span>وارد: {treasurySummary?.incoming ?? 0}</span>
+            <span>مصروف: {treasurySummary?.outgoing ?? 0}</span>
+            <span>الرصيد: {treasurySummary?.balance ?? 0}</span>
+            <button onClick={refreshTreasurySummary}>تحديث</button>
+          </div>
+          <h4>دفعات الموردين حسب المرحلة</h4>
+          <div className="row">
+            <select value={reportPhaseId} onChange={e=>setReportPhaseId(e.target.value===''? '': Number(e.target.value))}>
+              <option value="">كل المراحل</option>
+              {phases.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+            <button onClick={loadSuppliersReport}>عرض التقرير</button>
+          </div>
+          <table>
+            <thead><tr><th>المورد</th><th>المدفوع</th></tr></thead>
+            <tbody>
+              {suppliersReport.map((r, i) => (
+                <tr key={i}>
+                  <td>{r.supplierName ?? 'غير محدد'}</td>
+                  <td>{r.paid}</td>
                 </tr>
               ))}
             </tbody>
