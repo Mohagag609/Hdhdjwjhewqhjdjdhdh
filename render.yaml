@@ -1,11 +1,15 @@
 services:
-  # Backend API Service
+  # Backend API Service (Paid Plan)
   - type: web
     name: treasury-backend
     env: node
+    plan: starter
+    region: oregon
     buildCommand: cd backend && npm ci --only=production
     startCommand: cd backend && npm start
     healthCheckPath: /health
+    autoDeploy: true
+    branch: main
     envVars:
       - key: NODE_ENV
         value: production
