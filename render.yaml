@@ -13,5 +13,5 @@ services:
       - key: PORT
         value: 3000
       - key: DATABASE_URL
-        value: file:./dev.db
+        value: file:/tmp/dev.db
     autoDeploy: true
