@@ -10,31 +10,28 @@ async function main() {
             endDate: new Date('2026-01-01'),
         },
     });
-    const partnerA = await prisma.partner.upsert({
-        where: { name: 'شريك A' },
-        update: {},
-        create: { name: 'شريك A' },
-    });
-    const partnerB = await prisma.partner.upsert({
-        where: { name: 'شريك B' },
-        update: {},
-        create: { name: 'شريك B' },
-    });
-    await prisma.projectPartner.createMany({
-        data: [
-            { projectId: project.id, partnerId: partnerA.id, percentage: new client_1.Prisma.Decimal(50) },
-            { projectId: project.id, partnerId: partnerB.id, percentage: new client_1.Prisma.Decimal(50) },
-        ],
-        skipDuplicates: true,
-    });
+    const partnerA = (await prisma.partner.findFirst({ where: { name: 'شريك A' } })) ||
+        (await prisma.partner.create({ data: { name: 'شريك A' } }));
+    const partnerB = (await prisma.partner.findFirst({ where: { name: 'شريك B' } })) ||
+        (await prisma.partner.create({ data: { name: 'شريك B' } }));
+    const existingLinks = await prisma.projectPartner.findMany({ where: { projectId: project.id } });
+    const hasA = existingLinks.some((l) => l.partnerId === partnerA.id);
+    const hasB = existingLinks.some((l) => l.partnerId === partnerB.id);
+    if (!hasA) {
+        await prisma.projectPartner.create({
+            data: { projectId: project.id, partnerId: partnerA.id, percentage: new client_1.Prisma.Decimal(50) },
+        });
+    }
+    if (!hasB) {
+        await prisma.projectPartner.create({
+            data: { projectId: project.id, partnerId: partnerB.id, percentage: new client_1.Prisma.Decimal(50) },
+        });
+    }
     const foundation = await prisma.phase.create({
         data: { projectId: project.id, name: 'الأساسات', plannedAmount: new client_1.Prisma.Decimal(100000) },
     });
-    const cementSupplier = await prisma.supplier.upsert({
-        where: { name: 'مورد الأسمنت' },
-        update: {},
-        create: { name: 'مورد الأسمنت' },
-    });
+    const cementSupplier = (await prisma.supplier.findFirst({ where: { name: 'مورد الأسمنت' } })) ||
+        (await prisma.supplier.create({ data: { name: 'مورد الأسمنت' } }));
     await prisma.materialItem.create({
         data: {
             projectId: project.id,
