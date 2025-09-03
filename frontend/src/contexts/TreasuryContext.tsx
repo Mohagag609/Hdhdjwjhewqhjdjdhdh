@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Treasury, Transaction, FinancialSummary } from '../types';
-import apiService from '../services/api';
+import { Treasury, Transaction, FinancialSummary } from 'types';
+import apiService from 'services/api';
+import { useAuth } from 'contexts/AuthContext';
 
 interface TreasuryContextType {
   treasuries: Treasury[];
@@ -30,6 +31,7 @@ interface TreasuryProviderProps {
 }
 
 export const TreasuryProvider: React.FC<TreasuryProviderProps> = ({ children }) => {
+  const { isAuthenticated } = useAuth();
   const [treasuries, setTreasuries] = useState<Treasury[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [summary, setSummary] = useState<FinancialSummary | null>(null);
@@ -61,9 +63,9 @@ export const TreasuryProvider: React.FC<TreasuryProviderProps> = ({ children }) 
       const response = await apiService.getTransactions({ limit: 50 });
       
       if (response.success && response.data) {
-        setTransactions(response.data.transactions || []);
+        setTransactions((response.data.transactions as Transaction[]) || []);
       } else {
-        setError(response.message || 'فشل في جلب المعاملات');
+        setError('فشل في جلب المعاملات');
       }
     } catch (error: any) {
       setError(error.message || 'خطأ في جلب المعاملات');
@@ -105,10 +107,12 @@ export const TreasuryProvider: React.FC<TreasuryProviderProps> = ({ children }) 
   };
 
   useEffect(() => {
-    refreshTreasuries();
-    refreshTransactions();
-    refreshSummary();
-  }, []);
+    if (isAuthenticated) {
+      refreshTreasuries();
+      refreshTransactions();
+      refreshSummary();
+    }
+  }, [isAuthenticated]);
 
   const value: TreasuryContextType = {
     treasuries,

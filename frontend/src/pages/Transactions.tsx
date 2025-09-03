@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Transaction } from '../types';
-import apiService from '../services/api';
+import { Transaction, PaginationData } from 'types';
+import apiService from 'services/api';
 import { 
   ArrowUpDown, 
   TrendingUp, 
@@ -35,13 +35,18 @@ const Transactions: React.FC = () => {
     setError('');
     
     try {
-      const response = await apiService.getTransactions(filters);
+      // تحويل treasury_id إلى number إذا كان موجوداً
+      const apiFilters = {
+        ...filters,
+        treasury_id: filters.treasury_id ? parseInt(filters.treasury_id) : undefined
+      };
+      const response = await apiService.getTransactions(apiFilters);
       
       if (response.success && response.data) {
-        setTransactions(response.data.transactions || []);
-        setPagination(response.data.pagination || pagination);
+        setTransactions((response.data.transactions as Transaction[]) || []);
+        setPagination((response.data.pagination as PaginationData) || pagination);
       } else {
-        setError(response.message || 'فشل في جلب المعاملات');
+        setError('فشل في جلب المعاملات');
       }
     } catch (err: any) {
       setError(err.message || 'خطأ في جلب المعاملات');

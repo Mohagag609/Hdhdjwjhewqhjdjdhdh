@@ -97,7 +97,7 @@ export interface PaginationData {
 export interface PaginatedResponse<T> {
   success: boolean;
   data: {
-    [key: string]: T[];
+    [key: string]: T[] | PaginationData;
     pagination: PaginationData;
   };
 }
@@ -135,4 +135,5 @@ export interface TreasuryFormData {
   parent_id?: number;
   description?: string;
   balance?: number;
+  is_active?: boolean;
 }

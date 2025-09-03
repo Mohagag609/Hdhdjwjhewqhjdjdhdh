@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useTreasury } from '../contexts/TreasuryContext';
-import { useAuth } from '../contexts/AuthContext';
-import TreasuryCard from '../components/Treasury/TreasuryCard';
-import TransactionModal from '../components/Treasury/TransactionModal';
-import { Treasury } from '../types';
+import { useTreasury } from 'contexts/TreasuryContext';
+import { useAuth } from 'contexts/AuthContext';
+import TreasuryCard from 'components/Treasury/TreasuryCard';
+import TransactionModal from 'components/Treasury/TransactionModal';
+import { Treasury } from 'types';
 import { 
   Wallet, 
   TrendingUp, 

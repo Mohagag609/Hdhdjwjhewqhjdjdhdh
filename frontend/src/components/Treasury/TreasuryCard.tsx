@@ -1,5 +1,5 @@
 import React from 'react';
-import { Treasury } from '../../types';
+import { Treasury } from 'types';
 import { Wallet, TrendingUp, TrendingDown, ArrowUpDown } from 'lucide-react';
 
 interface TreasuryCardProps {

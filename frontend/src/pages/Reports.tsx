@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { FinancialSummary, TreasuryPerformance, TrendData } from '../types';
-import apiService from '../services/api';
+import { FinancialSummary, TreasuryPerformance, TrendData } from 'types';
+import apiService from 'services/api';
 import {
   Chart as ChartJS,
   CategoryScale,
