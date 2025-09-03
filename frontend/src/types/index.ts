@@ -135,4 +135,5 @@ export interface TreasuryFormData {
   parent_id?: number;
   description?: string;
   balance?: number;
+  is_active?: boolean;
 }
