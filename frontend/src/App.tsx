@@ -7,6 +7,8 @@ import ProjectPage from './pages/ProjectPage'
 function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([])
   const [name, setName] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [errMsg, setErrMsg] = useState('')
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -14,19 +16,28 @@ function ProjectsPage() {
   }, [])
 
   const create = async () => {
+    setErrMsg('')
     if (!name.trim()) return
-    const r = await api.post<Project>('/projects', { name })
-    setProjects([r.data, ...projects])
-    setName('')
-    navigate(`/projects/${r.data.id}`)
+    try {
+      setSubmitting(true)
+      const r = await api.post<Project>('/projects', { name })
+      setProjects([r.data, ...projects])
+      setName('')
+      navigate(`/projects/${r.data.id}`)
+    } catch (e: any) {
+      setErrMsg(e?.response?.data?.message || 'تعذر إنشاء المشروع')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
     <div className="container">
       <h2>المشاريع</h2>
+      {errMsg && <div style={{color:'red'}}>{errMsg}</div>}
       <div className="row">
         <input placeholder="اسم المشروع" value={name} onChange={e => setName(e.target.value)} />
-        <button onClick={create}>إنشاء</button>
+        <button disabled={submitting} onClick={create}>{submitting? '...جاري':'إنشاء'}</button>
       </div>
       <ul>
         {projects.map(p => (
