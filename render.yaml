@@ -4,7 +4,7 @@ services:
     env: node
     plan: free
     buildCommand: cd backend && npm ci --include=dev && npx prisma generate && npm run build:full
-    startCommand: cd backend && npx prisma migrate deploy && node dist/src/main.js
+    startCommand: cd backend && npx prisma db push && node dist/src/main.js
     envVars:
       - key: NODE_ENV
         value: production
@@ -13,5 +13,5 @@ services:
       - key: PORT
         value: 3000
       - key: DATABASE_URL
-        value: "postgresql://neondb_owner:npg_VlDF3zZpfIg4@ep-wispy-morning-ad2f7q2s-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require"
+        value: file:/tmp/dev.db
     autoDeploy: true
