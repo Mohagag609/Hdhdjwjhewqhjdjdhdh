@@ -1,0 +1,16 @@
+FROM postgres:17-alpine
+
+# Set environment variables
+ENV POSTGRES_DB=treasury_db
+ENV POSTGRES_USER=treasury_user
+ENV POSTGRES_PASSWORD=treasury_password
+ENV PGDATA=/var/lib/postgresql/data/pgdata
+
+# Create initialization script
+COPY backend/scripts/init-db.sql /docker-entrypoint-initdb.d/
+
+# Expose PostgreSQL port
+EXPOSE 5432
+
+# Start PostgreSQL
+CMD ["postgres"]
