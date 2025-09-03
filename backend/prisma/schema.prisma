@@ -43,6 +43,8 @@ model Partner {
   projects   ProjectPartner[]
   treasury   TreasuryTransaction[]
   settlements PartnerPhaseSettlement[]
+
+  @@unique([name])
 }
 
 model ProjectPartner {
@@ -63,6 +65,8 @@ model Supplier {
 
   materials  MaterialItem[]
   treasury   TreasuryTransaction[]
+
+  @@unique([name])
 }
 
 model MaterialItem {
