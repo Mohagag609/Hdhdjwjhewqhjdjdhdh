@@ -22,7 +22,7 @@
     "migrate": "prisma migrate dev",
     "generate": "prisma generate",
     "build:frontend": "cd ../frontend && npm ci --include=dev && npm run build && rm -rf ../backend/public && mkdir -p ../backend/public && cp -r dist/* ../backend/public/",
-    "build:full": "npm run build:frontend && nest build",
+    "build:full": "npm run build:frontend && npx nest build",
     "seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
