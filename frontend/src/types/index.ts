@@ -97,7 +97,7 @@ export interface PaginationData {
 export interface PaginatedResponse<T> {
   success: boolean;
   data: {
-    [key: string]: T[];
+    [key: string]: T[] | PaginationData;
     pagination: PaginationData;
   };
 }
