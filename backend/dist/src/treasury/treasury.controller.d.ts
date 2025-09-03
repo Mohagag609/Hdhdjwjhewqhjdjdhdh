@@ -24,17 +24,17 @@ export declare class TreasuryController {
         treasuryBalance: number;
     }>;
     list(projectId: number): Promise<({
+        partner: {
+            name: string;
+            createdAt: Date;
+            id: number;
+        } | null;
         phase: {
             name: string;
             createdAt: Date;
             id: number;
             projectId: number;
             plannedAmount: import("@prisma/client/runtime/library").Decimal | null;
-        } | null;
-        partner: {
-            name: string;
-            createdAt: Date;
-            id: number;
         } | null;
         supplier: {
             name: string;
@@ -61,11 +61,11 @@ export declare class TreasuryController {
         supplierId: number | null;
         direction: import("@prisma/client").$Enums.Direction;
         amount: import("@prisma/client/runtime/library").Decimal;
-        materialItemId: number | null;
         txDate: Date;
         reference: string | null;
         method: string | null;
         notes: string | null;
+        materialItemId: number | null;
     })[]>;
     receipt(projectId: number, dto: ReceiptDto): Promise<{
         id: number;
@@ -75,11 +75,11 @@ export declare class TreasuryController {
         supplierId: number | null;
         direction: import("@prisma/client").$Enums.Direction;
         amount: import("@prisma/client/runtime/library").Decimal;
-        materialItemId: number | null;
         txDate: Date;
         reference: string | null;
         method: string | null;
         notes: string | null;
+        materialItemId: number | null;
     }>;
     payment(projectId: number, dto: PaymentDto): Promise<{
         id: number;
@@ -89,11 +89,11 @@ export declare class TreasuryController {
         supplierId: number | null;
         direction: import("@prisma/client").$Enums.Direction;
         amount: import("@prisma/client/runtime/library").Decimal;
-        materialItemId: number | null;
         txDate: Date;
         reference: string | null;
         method: string | null;
         notes: string | null;
+        materialItemId: number | null;
     }>;
 }
 export {};

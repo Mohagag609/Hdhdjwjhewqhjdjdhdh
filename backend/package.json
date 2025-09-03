@@ -21,8 +21,9 @@
     "dev": "nest start --watch",
     "migrate": "prisma migrate dev",
     "generate": "prisma generate",
-    "build:frontend": "cd ../frontend && npm ci --include=dev && npm run build && rm -rf ../backend/public && mkdir -p ../backend/public && cp -r dist/* ../backend/public/",
-    "build:full": "npm run build:frontend && npx nest build",
+    "build:frontend": "cd ../frontend && npm ci --include=dev && npm run build",
+    "copy:frontend": "rm -rf dist/public && mkdir -p dist/public && cp -r ../frontend/dist/* dist/public/",
+    "build:full": "npx nest build && npm run build:frontend && npm run copy:frontend",
     "seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {

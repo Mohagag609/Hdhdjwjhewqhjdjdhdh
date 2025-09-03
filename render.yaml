@@ -4,7 +4,7 @@ services:
     env: node
     plan: free
     buildCommand: cd backend && npm ci --include=dev && npx prisma generate && npm run build:full
-    startCommand: cd backend && node dist/main.js
+    startCommand: cd backend && node dist/src/main.js
     envVars:
       - key: NODE_ENV
         value: production
