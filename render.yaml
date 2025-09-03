@@ -13,5 +13,5 @@ services:
       - key: PORT
         value: 3000
       - key: DATABASE_URL
-        value: postgresql://neondb_owner:npg_VlDF3zZpfIg4@ep-wispy-morning-ad2f7q2s-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+        value: "postgresql://neondb_owner:npg_VlDF3zZpfIg4@ep-wispy-morning-ad2f7q2s-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require"
     autoDeploy: true
