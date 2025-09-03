@@ -35,7 +35,12 @@ const Transactions: React.FC = () => {
     setError('');
     
     try {
-      const response = await apiService.getTransactions(filters);
+      // تحويل treasury_id إلى number إذا كان موجوداً
+      const apiFilters = {
+        ...filters,
+        treasury_id: filters.treasury_id ? parseInt(filters.treasury_id) : undefined
+      };
+      const response = await apiService.getTransactions(apiFilters);
       
       if (response.success && response.data) {
         setTransactions(response.data.transactions || []);
