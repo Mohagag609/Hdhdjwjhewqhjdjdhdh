@@ -1,21 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@200;300;400;500;600;700;800;900&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html {
-  font-family: 'Cairo', Arial, sans-serif;
-  direction: rtl;
-}
-
-body {
-  background-color: #f9fafb;
-  color: #111827;
-  line-height: 1.6;
-  min-height: 100vh;
+@layer base {
+  html {
+    font-family: 'Cairo', Arial, sans-serif;
+    direction: rtl;
+  }
+  
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
 }
 
 /* Layout fixes */
