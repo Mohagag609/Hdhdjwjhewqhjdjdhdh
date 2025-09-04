@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إدارة الخزائن - نظام الخزنة الاحترافي</title>
+    <title>الشركاء والموردين - نظام الخزنة الاحترافي</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -213,15 +213,15 @@
             box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
         }
 
-        /* Treasury Grid */
-        .treasury-grid {
+        /* Partners Grid */
+        .partners-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
             gap: 25px;
             margin-bottom: 40px;
         }
 
-        .treasury-card {
+        .partner-card {
             background: white;
             border-radius: 20px;
             padding: 30px;
@@ -231,12 +231,12 @@
             overflow: hidden;
         }
 
-        .treasury-card:hover {
+        .partner-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 20px 40px rgba(0,0,0,0.15);
         }
 
-        .treasury-card::before {
+        .partner-card::before {
             content: '';
             position: absolute;
             top: 0;
@@ -249,26 +249,45 @@
             opacity: 0.1;
         }
 
-        .treasury-header {
+        .partner-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 20px;
         }
 
-        .treasury-name {
+        .partner-name {
             font-size: 24px;
             font-weight: 700;
             color: #2d3748;
             margin-bottom: 5px;
         }
 
-        .treasury-parent {
-            font-size: 14px;
-            color: #718096;
+        .partner-type {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
         }
 
-        .treasury-actions {
+        .partner-type.supplier {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .partner-type.customer {
+            background: #bee3f8;
+            color: #2a4365;
+        }
+
+        .partner-type.both {
+            background: #fef5e7;
+            color: #744210;
+        }
+
+        .partner-actions {
             display: flex;
             gap: 10px;
         }
@@ -291,26 +310,24 @@
             color: white;
         }
 
-        .treasury-balance {
-            font-size: 32px;
-            font-weight: 700;
-            color: #2d3748;
+        .partner-info {
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             margin-bottom: 10px;
-        }
-
-        .treasury-currency {
-            font-size: 16px;
-            color: #718096;
-            margin-bottom: 20px;
-        }
-
-        .treasury-description {
             color: #4a5568;
-            line-height: 1.6;
-            margin-bottom: 20px;
         }
 
-        .treasury-stats {
+        .info-item i {
+            width: 20px;
+            color: #667eea;
+        }
+
+        .partner-stats {
             display: flex;
             justify-content: space-between;
             padding-top: 20px;
@@ -331,6 +348,14 @@
             font-size: 12px;
             color: #718096;
             margin-top: 5px;
+        }
+
+        .stat-item.positive .stat-value {
+            color: #38a169;
+        }
+
+        .stat-item.negative .stat-value {
+            color: #e53e3e;
         }
 
         /* Modal */
@@ -509,7 +534,7 @@
                 margin-right: 0;
             }
             
-            .treasury-grid {
+            .partners-grid {
                 grid-template-columns: 1fr;
             }
             
@@ -551,7 +576,7 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a href="/treasuries" class="nav-link active">
+                <a href="/treasuries" class="nav-link">
                     <i class="fas fa-vault"></i>
                     إدارة الخزائن
                 </a>
@@ -563,7 +588,7 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a href="/partners" class="nav-link">
+                <a href="/partners" class="nav-link active">
                     <i class="fas fa-handshake"></i>
                     الشركاء والموردين
                 </a>
@@ -585,69 +610,72 @@
 
     <!-- Main Content -->
     <main class="main-content">
-        <h1 class="page-title">إدارة الخزائن</h1>
+        <h1 class="page-title">الشركاء والموردين</h1>
         
         <!-- Controls -->
         <div class="controls">
             <div class="search-box">
                 <i class="fas fa-search"></i>
-                <input type="text" id="searchInput" placeholder="البحث في الخزائن...">
+                <input type="text" id="searchInput" placeholder="البحث في الشركاء...">
             </div>
-            <button class="add-btn" onclick="showAddTreasuryModal()">
+            <button class="add-btn" onclick="showAddPartnerModal()">
                 <i class="fas fa-plus"></i>
-                إضافة خزينة
+                إضافة شريك/مورد
             </button>
         </div>
 
-        <!-- Treasury Grid -->
-        <div id="treasuryGrid" class="treasury-grid">
+        <!-- Partners Grid -->
+        <div id="partnersGrid" class="partners-grid">
             <div class="loading">
                 <div class="spinner"></div>
-                <p>جاري تحميل الخزائن...</p>
+                <p>جاري تحميل الشركاء...</p>
             </div>
         </div>
     </main>
 
-    <!-- Add Treasury Modal -->
-    <div id="addTreasuryModal" class="modal">
+    <!-- Add Partner Modal -->
+    <div id="addPartnerModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title">إضافة خزينة جديدة</h2>
-                <span class="close" onclick="closeModal('addTreasuryModal')">&times;</span>
+                <h2 class="modal-title">إضافة شريك/مورد جديد</h2>
+                <span class="close" onclick="closeModal('addPartnerModal')">&times;</span>
             </div>
             <div class="modal-body">
-                <form id="addTreasuryForm">
+                <form id="addPartnerForm">
                     <div class="form-group">
-                        <label class="form-label">اسم الخزينة *</label>
-                        <input type="text" class="form-input" id="treasuryName" required>
+                        <label class="form-label">اسم الشريك/المورد *</label>
+                        <input type="text" class="form-input" id="partnerName" required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">الخزينة الرئيسية</label>
-                        <select class="form-select" id="parentTreasury">
-                            <option value="">بدون خزينة رئيسية</option>
+                        <label class="form-label">نوع الشريك *</label>
+                        <select class="form-select" id="partnerType" required>
+                            <option value="">اختر نوع الشريك</option>
+                            <option value="supplier">مورد</option>
+                            <option value="customer">عميل</option>
+                            <option value="both">مورد وعميل</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">الرصيد الابتدائي</label>
-                        <input type="number" class="form-input" id="initialBalance" step="0.01" value="0">
+                        <label class="form-label">البريد الإلكتروني</label>
+                        <input type="email" class="form-input" id="partnerEmail">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">العملة</label>
-                        <select class="form-select" id="currency">
-                            <option value="SAR">ريال سعودي (SAR)</option>
-                            <option value="USD">دولار أمريكي (USD)</option>
-                            <option value="EUR">يورو (EUR)</option>
-                        </select>
+                        <label class="form-label">رقم الهاتف</label>
+                        <input type="tel" class="form-input" id="partnerPhone">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">الوصف</label>
-                        <textarea class="form-input form-textarea" id="description" placeholder="وصف الخزينة..."></textarea>
+                        <label class="form-label">العنوان</label>
+                        <textarea class="form-input form-textarea" id="partnerAddress" placeholder="عنوان الشريك/المورد..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">حد الائتمان</label>
+                        <input type="number" class="form-input" id="creditLimit" step="0.01" value="0">
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeModal('addTreasuryModal')">إلغاء</button>
-                <button type="button" class="btn btn-primary" onclick="addTreasury()">إضافة الخزينة</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addPartnerModal')">إلغاء</button>
+                <button type="button" class="btn btn-primary" onclick="addPartner()">إضافة الشريك</button>
             </div>
         </div>
     </div>
@@ -655,116 +683,122 @@
     <script>
         // تحميل البيانات عند فتح الصفحة
         document.addEventListener('DOMContentLoaded', function() {
-            loadTreasuries();
+            loadPartners();
             loadUserInfo();
         });
 
-        // تحميل الخزائن
-        async function loadTreasuries() {
+        // تحميل الشركاء
+        async function loadPartners() {
             try {
-                const response = await fetch('/api/treasuries');
+                const response = await fetch('/api/partners');
                 const data = await response.json();
                 
                 if (data.success) {
-                    displayTreasuries(data.data);
+                    displayPartners(data.data);
                 } else {
-                    showError('خطأ في تحميل الخزائن');
+                    showError('خطأ في تحميل الشركاء');
                 }
             } catch (error) {
-                console.error('Error loading treasuries:', error);
+                console.error('Error loading partners:', error);
                 showError('خطأ في الاتصال بالخادم');
             }
         }
 
-        // عرض الخزائن
-        function displayTreasuries(treasuries) {
-            const grid = document.getElementById('treasuryGrid');
+        // عرض الشركاء
+        function displayPartners(partners) {
+            const grid = document.getElementById('partnersGrid');
             
-            if (treasuries.length === 0) {
+            if (partners.length === 0) {
                 grid.innerHTML = `
                     <div style="grid-column: 1 / -1; text-align: center; padding: 60px; color: #718096;">
-                        <i class="fas fa-vault" style="font-size: 64px; margin-bottom: 20px; opacity: 0.3;"></i>
-                        <h3>لا توجد خزائن</h3>
-                        <p>ابدأ بإضافة خزينة جديدة</p>
+                        <i class="fas fa-handshake" style="font-size: 64px; margin-bottom: 20px; opacity: 0.3;"></i>
+                        <h3>لا توجد شركاء</h3>
+                        <p>ابدأ بإضافة شريك/مورد جديد</p>
                     </div>
                 `;
                 return;
             }
 
-            grid.innerHTML = treasuries.map(treasury => `
-                <div class="treasury-card">
-                    <div class="treasury-header">
+            grid.innerHTML = partners.map(partner => `
+                <div class="partner-card">
+                    <div class="partner-header">
                         <div>
-                            <div class="treasury-name">${treasury.name}</div>
-                            ${treasury.parent_name ? `<div class="treasury-parent">تحت: ${treasury.parent_name}</div>` : ''}
+                            <div class="partner-name">${partner.name}</div>
+                            <span class="partner-type ${partner.type}">${getPartnerTypeText(partner.type)}</span>
                         </div>
-                        <div class="treasury-actions">
-                            <button class="action-btn" onclick="editTreasury(${treasury.id})" title="تعديل">
+                        <div class="partner-actions">
+                            <button class="action-btn" onclick="viewPartnerStatement(${partner.id})" title="كشف الحساب">
+                                <i class="fas fa-file-alt"></i>
+                            </button>
+                            <button class="action-btn" onclick="editPartner(${partner.id})" title="تعديل">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="action-btn" onclick="deleteTreasury(${treasury.id})" title="حذف">
+                            <button class="action-btn" onclick="deletePartner(${partner.id})" title="حذف">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
                     </div>
-                    <div class="treasury-balance">${formatCurrency(treasury.balance)}</div>
-                    <div class="treasury-currency">${treasury.currency}</div>
-                    ${treasury.description ? `<div class="treasury-description">${treasury.description}</div>` : ''}
-                    <div class="treasury-stats">
-                        <div class="stat-item">
-                            <div class="stat-value">${treasury.children_count}</div>
-                            <div class="stat-label">خزائن فرعية</div>
+                    <div class="partner-info">
+                        ${partner.email ? `
+                            <div class="info-item">
+                                <i class="fas fa-envelope"></i>
+                                <span>${partner.email}</span>
+                            </div>
+                        ` : ''}
+                        ${partner.phone ? `
+                            <div class="info-item">
+                                <i class="fas fa-phone"></i>
+                                <span>${partner.phone}</span>
+                            </div>
+                        ` : ''}
+                        ${partner.address ? `
+                            <div class="info-item">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>${partner.address}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="partner-stats">
+                        <div class="stat-item positive">
+                            <div class="stat-value">${formatCurrency(partner.total_income)}</div>
+                            <div class="stat-label">إجمالي الإيرادات</div>
+                        </div>
+                        <div class="stat-item negative">
+                            <div class="stat-value">${formatCurrency(partner.total_expense)}</div>
+                            <div class="stat-label">إجمالي المصروفات</div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-value">${treasury.balance >= 0 ? '+' : ''}${formatCurrency(treasury.balance)}</div>
-                            <div class="stat-label">الرصيد</div>
+                            <div class="stat-value">${formatCurrency(partner.credit_limit)}</div>
+                            <div class="stat-label">حد الائتمان</div>
                         </div>
                     </div>
                 </div>
             `).join('');
         }
 
-        // إظهار نافذة إضافة خزينة
-        async function showAddTreasuryModal() {
-            // تحميل الخزائن للقائمة المنسدلة
-            try {
-                const response = await fetch('/api/treasuries');
-                const data = await response.json();
-                
-                if (data.success) {
-                    const select = document.getElementById('parentTreasury');
-                    select.innerHTML = '<option value="">بدون خزينة رئيسية</option>';
-                    data.data.forEach(treasury => {
-                        select.innerHTML += `<option value="${treasury.id}">${treasury.name}</option>`;
-                    });
-                }
-            } catch (error) {
-                console.error('Error loading treasuries for dropdown:', error);
-            }
-            
-            document.getElementById('addTreasuryModal').style.display = 'block';
+        // إظهار نافذة إضافة شريك
+        function showAddPartnerModal() {
+            document.getElementById('addPartnerModal').style.display = 'block';
         }
 
-        // إضافة خزينة
-        async function addTreasury() {
-            const form = document.getElementById('addTreasuryForm');
-            const formData = new FormData(form);
-            
+        // إضافة شريك
+        async function addPartner() {
             const data = {
-                name: document.getElementById('treasuryName').value,
-                parent_id: document.getElementById('parentTreasury').value || null,
-                balance: parseFloat(document.getElementById('initialBalance').value) || 0,
-                currency: document.getElementById('currency').value,
-                description: document.getElementById('description').value
+                name: document.getElementById('partnerName').value,
+                type: document.getElementById('partnerType').value,
+                email: document.getElementById('partnerEmail').value,
+                phone: document.getElementById('partnerPhone').value,
+                address: document.getElementById('partnerAddress').value,
+                credit_limit: parseFloat(document.getElementById('creditLimit').value) || 0
             };
 
-            if (!data.name) {
-                showError('اسم الخزينة مطلوب');
+            if (!data.name || !data.type) {
+                showError('اسم الشريك ونوعه مطلوبان');
                 return;
             }
 
             try {
-                const response = await fetch('/api/treasuries', {
+                const response = await fetch('/api/partners', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -775,51 +809,35 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    showSuccess('تم إضافة الخزينة بنجاح');
-                    closeModal('addTreasuryModal');
-                    form.reset();
-                    loadTreasuries();
+                    showSuccess('تم إضافة الشريك بنجاح');
+                    closeModal('addPartnerModal');
+                    document.getElementById('addPartnerForm').reset();
+                    loadPartners();
                 } else {
-                    showError(result.error || 'خطأ في إضافة الخزينة');
+                    showError(result.error || 'خطأ في إضافة الشريك');
                 }
             } catch (error) {
-                console.error('Error adding treasury:', error);
+                console.error('Error adding partner:', error);
                 showError('خطأ في الاتصال بالخادم');
             }
         }
 
-        // تعديل خزينة
-        async function editTreasury(treasuryId) {
-            // يمكن إضافة نافذة تعديل هنا
+        // عرض كشف حساب الشريك
+        function viewPartnerStatement(partnerId) {
+            window.open(`/api/partners/${partnerId}/statement`, '_blank');
+        }
+
+        // تعديل شريك
+        function editPartner(partnerId) {
             showSuccess('وظيفة التعديل قيد التطوير');
         }
 
-        // حذف خزينة
-        async function deleteTreasury(treasuryId) {
-            if (!confirm('هل أنت متأكد من حذف هذه الخزينة؟')) {
+        // حذف شريك
+        function deletePartner(partnerId) {
+            if (!confirm('هل أنت متأكد من حذف هذا الشريك؟')) {
                 return;
             }
-
-            try {
-                const response = await fetch(`/api/treasuries/${treasuryId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                });
-
-                const result = await response.json();
-                
-                if (result.success) {
-                    showSuccess('تم حذف الخزينة بنجاح');
-                    loadTreasuries();
-                } else {
-                    showError(result.error || 'خطأ في حذف الخزينة');
-                }
-            } catch (error) {
-                console.error('Error deleting treasury:', error);
-                showError('خطأ في الاتصال بالخادم');
-            }
+            showSuccess('وظيفة الحذف قيد التطوير');
         }
 
         // إغلاق النافذة
@@ -833,6 +851,16 @@
                 style: 'currency',
                 currency: 'SAR'
             }).format(amount);
+        }
+
+        // الحصول على نص نوع الشريك
+        function getPartnerTypeText(type) {
+            const types = {
+                'supplier': 'مورد',
+                'customer': 'عميل',
+                'both': 'مورد وعميل'
+            };
+            return types[type] || type;
         }
 
         // تحميل معلومات المستخدم
@@ -866,13 +894,13 @@
         // البحث
         document.getElementById('searchInput').addEventListener('input', function(e) {
             const searchTerm = e.target.value.toLowerCase();
-            const cards = document.querySelectorAll('.treasury-card');
+            const cards = document.querySelectorAll('.partner-card');
             
             cards.forEach(card => {
-                const name = card.querySelector('.treasury-name').textContent.toLowerCase();
-                const description = card.querySelector('.treasury-description')?.textContent.toLowerCase() || '';
+                const name = card.querySelector('.partner-name').textContent.toLowerCase();
+                const email = card.querySelector('.info-item span')?.textContent.toLowerCase() || '';
                 
-                if (name.includes(searchTerm) || description.includes(searchTerm)) {
+                if (name.includes(searchTerm) || email.includes(searchTerm)) {
                     card.style.display = 'block';
                 } else {
                     card.style.display = 'none';

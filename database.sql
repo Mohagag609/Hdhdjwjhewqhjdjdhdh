@@ -30,6 +30,39 @@ CREATE TABLE IF NOT EXISTS treasuries (
     FOREIGN KEY (parent_id) REFERENCES treasuries(id)
 );
 
+-- جدول أنواع الإيرادات
+CREATE TABLE IF NOT EXISTS income_types (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    is_active BOOLEAN DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- جدول أنواع المصروفات
+CREATE TABLE IF NOT EXISTS expense_types (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    is_active BOOLEAN DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- جدول الشركاء
+CREATE TABLE IF NOT EXISTS partners (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(100) NOT NULL,
+    type VARCHAR(20) CHECK (type IN ('supplier', 'customer', 'both')) DEFAULT 'both',
+    email VARCHAR(100),
+    phone VARCHAR(20),
+    address TEXT,
+    credit_limit DECIMAL(15,2) DEFAULT 0.00,
+    current_balance DECIMAL(15,2) DEFAULT 0.00,
+    is_active BOOLEAN DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- جدول المعاملات المالية
 CREATE TABLE IF NOT EXISTS transactions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -38,10 +71,18 @@ CREATE TABLE IF NOT EXISTS transactions (
     description TEXT NOT NULL,
     reference VARCHAR(50),
     treasury_id INTEGER NOT NULL,
+    partner_id INTEGER,
+    income_type_id INTEGER,
+    expense_type_id INTEGER,
+    transfer_to_treasury_id INTEGER,
     user_id INTEGER NOT NULL,
     transaction_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (treasury_id) REFERENCES treasuries(id),
+    FOREIGN KEY (partner_id) REFERENCES partners(id),
+    FOREIGN KEY (income_type_id) REFERENCES income_types(id),
+    FOREIGN KEY (expense_type_id) REFERENCES expense_types(id),
+    FOREIGN KEY (transfer_to_treasury_id) REFERENCES treasuries(id),
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
@@ -118,3 +159,26 @@ INSERT INTO system_settings (setting_key, setting_value, description) VALUES
 ('company_email', 'info@treasury.com', 'بريد الشركة الإلكتروني'),
 ('default_currency', 'SAR', 'العملة الافتراضية'),
 ('check_prefix', 'CHK', 'بادئة أرقام الشيكات');
+
+-- إدراج أنواع الإيرادات الافتراضية
+INSERT INTO income_types (name, description) VALUES 
+('مبيعات', 'إيرادات من المبيعات'),
+('خدمات', 'إيرادات من تقديم الخدمات'),
+('استثمارات', 'إيرادات من الاستثمارات'),
+('إيرادات أخرى', 'إيرادات متنوعة');
+
+-- إدراج أنواع المصروفات الافتراضية
+INSERT INTO expense_types (name, description) VALUES 
+('مشتريات', 'مصروفات المشتريات'),
+('رواتب', 'مصروفات الرواتب والأجور'),
+('إيجار', 'مصروفات الإيجار'),
+('كهرباء وماء', 'مصروفات المرافق'),
+('صيانة', 'مصروفات الصيانة'),
+('مصروفات أخرى', 'مصروفات متنوعة');
+
+-- إدراج عينات من الشركاء
+INSERT INTO partners (name, type, email, phone, address, credit_limit) VALUES 
+('شركة التوريدات العامة', 'supplier', 'supplies@company.com', '0112345678', 'الرياض، حي العليا', 100000.00),
+('مؤسسة الخدمات المتكاملة', 'supplier', 'services@company.com', '0118765432', 'جدة، حي الروضة', 75000.00),
+('عميل أحمد محمد', 'customer', 'ahmed@email.com', '0501234567', 'الرياض، حي النخيل', 50000.00),
+('عميل فاطمة علي', 'customer', 'fatima@email.com', '0507654321', 'جدة، حي الزهراء', 30000.00);

@@ -567,6 +567,12 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a href="/partners" class="nav-link">
+                    <i class="fas fa-handshake"></i>
+                    الشركاء والموردين
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="/reports" class="nav-link">
                     <i class="fas fa-chart-line"></i>
                     التقارير
@@ -623,11 +629,35 @@
                 <form id="addTransactionForm">
                     <div class="form-group">
                         <label class="form-label">نوع المعاملة *</label>
-                        <select class="form-select" id="transactionType" required>
+                        <select class="form-select" id="transactionType" required onchange="toggleTransactionFields()">
                             <option value="">اختر نوع المعاملة</option>
                             <option value="income">إيراد</option>
                             <option value="expense">مصروف</option>
                             <option value="transfer">تحويل</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="incomeTypeGroup" style="display: none;">
+                        <label class="form-label">نوع الإيراد</label>
+                        <select class="form-select" id="incomeTypeId">
+                            <option value="">اختر نوع الإيراد</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="expenseTypeGroup" style="display: none;">
+                        <label class="form-label">نوع المصروف</label>
+                        <select class="form-select" id="expenseTypeId">
+                            <option value="">اختر نوع المصروف</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="transferToGroup" style="display: none;">
+                        <label class="form-label">الخزينة المستقبلة</label>
+                        <select class="form-select" id="transferToTreasuryId">
+                            <option value="">اختر الخزينة المستقبلة</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">الشريك/المورد</label>
+                        <select class="form-select" id="partnerId">
+                            <option value="">اختر الشريك/المورد</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -709,6 +739,8 @@
                             <th>المبلغ</th>
                             <th>الوصف</th>
                             <th>الخزينة</th>
+                            <th>الشريك</th>
+                            <th>نوع الإيراد/المصروف</th>
                             <th>المستخدم</th>
                             <th>الإجراءات</th>
                         </tr>
@@ -731,6 +763,8 @@
                                 <td>
                                     <span class="treasury-name">${transaction.treasury_name}</span>
                                 </td>
+                                <td>${transaction.partner_name || '-'}</td>
+                                <td>${transaction.income_type_name || transaction.expense_type_name || '-'}</td>
                                 <td>${transaction.user_name}</td>
                                 <td>
                                     <div class="transaction-actions">
@@ -758,13 +792,64 @@
                 
                 if (data.success) {
                     const select = document.getElementById('treasuryId');
+                    const transferSelect = document.getElementById('transferToTreasuryId');
                     select.innerHTML = '<option value="">اختر الخزينة</option>';
+                    transferSelect.innerHTML = '<option value="">اختر الخزينة المستقبلة</option>';
                     data.data.forEach(treasury => {
                         select.innerHTML += `<option value="${treasury.id}">${treasury.name}</option>`;
+                        transferSelect.innerHTML += `<option value="${treasury.id}">${treasury.name}</option>`;
                     });
                 }
             } catch (error) {
                 console.error('Error loading treasuries for dropdown:', error);
+            }
+
+            // تحميل الشركاء
+            try {
+                const response = await fetch('/api/partners');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const select = document.getElementById('partnerId');
+                    select.innerHTML = '<option value="">اختر الشريك/المورد</option>';
+                    data.data.forEach(partner => {
+                        select.innerHTML += `<option value="${partner.id}">${partner.name} (${partner.type})</option>`;
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading partners for dropdown:', error);
+            }
+
+            // تحميل أنواع الإيرادات
+            try {
+                const response = await fetch('/api/income-types');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const select = document.getElementById('incomeTypeId');
+                    select.innerHTML = '<option value="">اختر نوع الإيراد</option>';
+                    data.data.forEach(type => {
+                        select.innerHTML += `<option value="${type.id}">${type.name}</option>`;
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading income types for dropdown:', error);
+            }
+
+            // تحميل أنواع المصروفات
+            try {
+                const response = await fetch('/api/expense-types');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const select = document.getElementById('expenseTypeId');
+                    select.innerHTML = '<option value="">اختر نوع المصروف</option>';
+                    data.data.forEach(type => {
+                        select.innerHTML += `<option value="${type.id}">${type.name}</option>`;
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading expense types for dropdown:', error);
             }
             
             // تعيين التاريخ الحالي
@@ -775,6 +860,28 @@
             document.getElementById('addTransactionModal').style.display = 'block';
         }
 
+        // تبديل الحقول حسب نوع المعاملة
+        function toggleTransactionFields() {
+            const type = document.getElementById('transactionType').value;
+            const incomeGroup = document.getElementById('incomeTypeGroup');
+            const expenseGroup = document.getElementById('expenseTypeGroup');
+            const transferGroup = document.getElementById('transferToGroup');
+            
+            // إخفاء جميع المجموعات
+            incomeGroup.style.display = 'none';
+            expenseGroup.style.display = 'none';
+            transferGroup.style.display = 'none';
+            
+            // إظهار المجموعة المناسبة
+            if (type === 'income') {
+                incomeGroup.style.display = 'block';
+            } else if (type === 'expense') {
+                expenseGroup.style.display = 'block';
+            } else if (type === 'transfer') {
+                transferGroup.style.display = 'block';
+            }
+        }
+
         // إضافة معاملة
         async function addTransaction() {
             const form = document.getElementById('addTransactionForm');
@@ -783,6 +890,10 @@
                 type: document.getElementById('transactionType').value,
                 amount: parseFloat(document.getElementById('amount').value),
                 treasury_id: document.getElementById('treasuryId').value,
+                partner_id: document.getElementById('partnerId').value || null,
+                income_type_id: document.getElementById('incomeTypeId').value || null,
+                expense_type_id: document.getElementById('expenseTypeId').value || null,
+                transfer_to_treasury_id: document.getElementById('transferToTreasuryId').value || null,
                 description: document.getElementById('description').value,
                 reference: document.getElementById('reference').value,
                 transaction_date: document.getElementById('transactionDate').value || new Date().toISOString()
