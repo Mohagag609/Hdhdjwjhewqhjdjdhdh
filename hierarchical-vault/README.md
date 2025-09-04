@@ -77,17 +77,37 @@
 
 ### المتطلبات
 - Node.js 16+
-- MySQL 8.0+
+- MySQL 8.0+ أو PostgreSQL 12+
 - npm أو yarn
+
+### 🚀 التشغيل السريع
+
+#### الطريقة الأولى: استخدام سكريبت التشغيل
+```bash
+# تشغيل السكريبت التلقائي
+./start.sh
+```
+
+#### الطريقة الثانية: التشغيل اليدوي
 
 ### 1. إعداد قاعدة البيانات
 
+#### MySQL:
 ```bash
 # الدخول إلى MySQL
 mysql -u root -p
 
 # تشغيل ملف إنشاء قاعدة البيانات
 source /path/to/hierarchical-vault/database/schema.sql
+```
+
+#### PostgreSQL:
+```bash
+# الدخول إلى PostgreSQL
+psql -U postgres
+
+# تشغيل ملف إنشاء قاعدة البيانات
+\i /path/to/hierarchical-vault/database/schema-postgresql.sql
 ```
 
 ### 2. إعداد الخادم الخلفي
@@ -108,6 +128,20 @@ npm install
 # تأكد من وجود ملف .env مع VITE_API_URL=http://localhost:5000/api
 npm run dev
 ```
+
+### 🐳 التشغيل باستخدام Docker
+
+```bash
+# تشغيل جميع الخدمات
+docker-compose up -d
+
+# إيقاف الخدمات
+docker-compose down
+```
+
+### 🌐 النشر على Render
+
+راجع ملف [DEPLOYMENT.md](DEPLOYMENT.md) للحصول على تعليمات مفصلة للنشر على Render.
 
 ## الاستخدام
 

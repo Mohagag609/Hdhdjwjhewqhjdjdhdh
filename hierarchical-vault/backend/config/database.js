@@ -1,29 +1,27 @@
-const mysql = require('mysql2/promise');
+const { Pool } = require('pg');
 require('dotenv').config();
 
 const dbConfig = {
   host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
+  user: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'hierarchical_vault',
-  port: process.env.DB_PORT || 3306,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-  acquireTimeout: 60000,
-  timeout: 60000,
-  reconnect: true
+  port: process.env.DB_PORT || 5432,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
 };
 
 // إنشاء pool للاتصالات
-const pool = mysql.createPool(dbConfig);
+const pool = new Pool(dbConfig);
 
 // اختبار الاتصال
 const testConnection = async () => {
   try {
-    const connection = await pool.getConnection();
+    const client = await pool.connect();
     console.log('✅ تم الاتصال بقاعدة البيانات بنجاح');
-    connection.release();
+    client.release();
   } catch (error) {
     console.error('❌ خطأ في الاتصال بقاعدة البيانات:', error.message);
     process.exit(1);

@@ -25,10 +25,11 @@ router.post('/login', [
     const { username, password } = req.body;
 
     // البحث عن المستخدم
-    const [users] = await pool.execute(
-      'SELECT * FROM users WHERE username = ? OR email = ?',
+    const result = await pool.query(
+      'SELECT * FROM users WHERE username = $1 OR email = $2',
       [username, username]
     );
+    const users = result.rows;
 
     if (users.length === 0) {
       return res.status(401).json({

@@ -1,0 +1,36 @@
+{
+  "name": "hierarchical-vault",
+  "version": "1.0.0",
+  "description": "نظام إدارة المالية الهرمي",
+  "main": "index.js",
+  "scripts": {
+    "install:backend": "cd backend && npm install",
+    "install:frontend": "cd frontend && npm install",
+    "install:all": "npm run install:backend && npm run install:frontend",
+    "build:frontend": "cd frontend && npm run build",
+    "start:backend": "cd backend && npm start",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "build": "npm run build:frontend",
+    "start": "npm run start:backend"
+  },
+  "keywords": [
+    "vault",
+    "financial",
+    "management",
+    "hierarchical",
+    "react",
+    "nodejs",
+    "mysql"
+  ],
+  "author": "Hierarchical Vault Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  }
+}
