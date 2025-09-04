@@ -3,7 +3,7 @@ services:
   - type: web
     name: hierarchical-vault-backend
     env: node
-    plan: starter
+    plan: free
     region: oregon
     buildCommand: cd backend && npm install
     startCommand: cd backend && npm start
@@ -35,7 +35,7 @@ services:
   - type: web
     name: hierarchical-vault-frontend
     env: static
-    plan: starter
+    plan: free
     region: oregon
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: frontend/dist
