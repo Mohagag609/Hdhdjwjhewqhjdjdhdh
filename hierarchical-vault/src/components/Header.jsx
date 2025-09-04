@@ -16,8 +16,8 @@ const Header = () => {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await logout();
-    navigate('/login');
+    // تخطي تسجيل الخروج - المستخدم يبقى مسجل دخول
+    console.log('تسجيل الخروج معطل - المستخدم يبقى مسجل دخول');
   };
 
   const navigation = [
