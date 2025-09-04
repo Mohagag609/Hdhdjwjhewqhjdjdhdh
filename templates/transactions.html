@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المعاملات - نظام الخزنة الاحترافي</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='modern-styles.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- الشريط الجانبي -->
+    <aside id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fas fa-cash-register"></i>
+                <span>الخزنة الاحترافية</span>
+            </div>
+            <button id="sidebarToggle" class="menu-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        <nav class="nav-menu">
+            <ul>
+                <li class="nav-item">
+                    <a href="/dashboard" class="nav-link">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>لوحة التحكم</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/cash-flow" class="nav-link">
+                        <i class="fas fa-chart-line"></i>
+                        <span>التدفق النقدي</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/transactions" class="nav-link active">
+                        <i class="fas fa-exchange-alt"></i>
+                        <span>المعاملات</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/invoices" class="nav-link">
+                        <i class="fas fa-file-invoice"></i>
+                        <span>الفواتير</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/customers" class="nav-link">
+                        <i class="fas fa-users"></i>
+                        <span>العملاء</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/suppliers" class="nav-link">
+                        <i class="fas fa-truck"></i>
+                        <span>الموردين</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/inventory" class="nav-link">
+                        <i class="fas fa-boxes"></i>
+                        <span>المخزون</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/treasury" class="nav-link">
+                        <i class="fas fa-vault"></i>
+                        <span>الخزائن</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/reports" class="nav-link">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>التقارير</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/settings" class="nav-link">
+                        <i class="fas fa-cog"></i>
+                        <span>الإعدادات</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- المحتوى الرئيسي -->
+    <div class="main-content" id="mainContent">
+        <!-- شريط التنقل العلوي -->
+        <header class="header">
+            <div class="header-left">
+                <button id="menuToggle" class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1>إدارة المعاملات</h1>
+            </div>
+            <div class="header-right">
+                <div class="user-info">
+                    <i class="fas fa-user-circle"></i>
+                    <span id="currentUser">المستخدم</span>
+                </div>
+                <button id="logoutBtn" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    خروج
+                </button>
+            </div>
+        </header>
+
+        <!-- المحتوى -->
+        <div class="content">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">إدارة المعاملات</h3>
+                    <div>
+                        <button class="btn btn-primary" onclick="showAddTransactionModal()">
+                            <i class="fas fa-plus"></i>
+                            إضافة معاملة
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- فلاتر البحث -->
+                    <div class="form-group">
+                        <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                            <input type="date" id="fromDate" class="form-input" placeholder="من تاريخ" style="flex: 1; min-width: 150px;">
+                            <input type="date" id="toDate" class="form-input" placeholder="إلى تاريخ" style="flex: 1; min-width: 150px;">
+                            <select id="transactionType" class="form-select" style="flex: 1; min-width: 150px;">
+                                <option value="">جميع الأنواع</option>
+                                <option value="receipt">إيراد</option>
+                                <option value="payment">مصروف</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="filterTransactions()">
+                                <i class="fas fa-search"></i>
+                                بحث
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>رقم المعاملة</th>
+                                    <th>التاريخ</th>
+                                    <th>النوع</th>
+                                    <th>المبلغ</th>
+                                    <th>الوصف</th>
+                                    <th>الخزينة</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionsTable">
+                                <!-- سيتم ملؤها بالبيانات -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- النوافذ المنبثقة -->
+    <div id="modals"></div>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='transactions.js') }}"></script>
+</body>
+</html>

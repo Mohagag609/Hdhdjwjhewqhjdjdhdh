@@ -121,13 +121,152 @@ CREATE TABLE IF NOT EXISTS activity_logs (
 
 -- إدراج البيانات الأولية
 
--- إدراج مستخدم إداري افتراضي
-INSERT INTO users (username, password, full_name, email, role) VALUES 
-('admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'مدير النظام', 'admin@treasury.com', 'admin');
+-- ملاحظة: المستخدم الافتراضي سيتم إنشاؤه تلقائياً بواسطة التطبيق
 
 -- إدراج خزينة رئيسية افتراضية
 INSERT INTO treasuries (name, description, currency, initial_balance, current_balance) VALUES 
 ('الخزينة الرئيسية', 'الخزينة الرئيسية للنظام', 'SAR', 0.00, 0.00);
+
+-- جدول الفواتير
+CREATE TABLE IF NOT EXISTS invoices (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    invoice_number VARCHAR(50) UNIQUE NOT NULL,
+    customer_id INTEGER,
+    amount DECIMAL(15,2) NOT NULL,
+    tax_amount DECIMAL(15,2) DEFAULT 0.00,
+    total_amount DECIMAL(15,2) NOT NULL,
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'overdue', 'cancelled')),
+    issue_date DATE NOT NULL,
+    due_date DATE NOT NULL,
+    description TEXT,
+    created_by INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (customer_id) REFERENCES parties(id),
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+
+-- جدول المنتجات
+CREATE TABLE IF NOT EXISTS products (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    category VARCHAR(50),
+    sku VARCHAR(50) UNIQUE,
+    purchase_price DECIMAL(15,2) NOT NULL,
+    sale_price DECIMAL(15,2) NOT NULL,
+    quantity INTEGER DEFAULT 0,
+    min_quantity INTEGER DEFAULT 0,
+    unit VARCHAR(20) DEFAULT 'قطعة',
+    is_active BOOLEAN DEFAULT 1,
+    created_by INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+
+-- جدول حركة المخزون
+CREATE TABLE IF NOT EXISTS inventory_transactions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    product_id INTEGER NOT NULL,
+    transaction_type VARCHAR(20) CHECK (transaction_type IN ('in', 'out', 'adjustment')),
+    quantity INTEGER NOT NULL,
+    unit_price DECIMAL(15,2),
+    total_amount DECIMAL(15,2),
+    reference_type VARCHAR(50), -- 'purchase', 'sale', 'adjustment'
+    reference_id INTEGER,
+    description TEXT,
+    created_by INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES products(id),
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+
+-- جدول المبيعات
+CREATE TABLE IF NOT EXISTS sales (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    sale_number VARCHAR(50) UNIQUE NOT NULL,
+    customer_id INTEGER,
+    total_amount DECIMAL(15,2) NOT NULL,
+    tax_amount DECIMAL(15,2) DEFAULT 0.00,
+    discount_amount DECIMAL(15,2) DEFAULT 0.00,
+    net_amount DECIMAL(15,2) NOT NULL,
+    payment_method VARCHAR(20) DEFAULT 'cash',
+    status VARCHAR(20) DEFAULT 'completed' CHECK (status IN ('pending', 'completed', 'cancelled')),
+    sale_date DATE NOT NULL,
+    notes TEXT,
+    created_by INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (customer_id) REFERENCES parties(id),
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+
+-- جدول تفاصيل المبيعات
+CREATE TABLE IF NOT EXISTS sale_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    sale_id INTEGER NOT NULL,
+    product_id INTEGER NOT NULL,
+    quantity INTEGER NOT NULL,
+    unit_price DECIMAL(15,2) NOT NULL,
+    total_price DECIMAL(15,2) NOT NULL,
+    FOREIGN KEY (sale_id) REFERENCES sales(id),
+    FOREIGN KEY (product_id) REFERENCES products(id)
+);
+
+-- جدول المشتريات
+CREATE TABLE IF NOT EXISTS purchases (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    purchase_number VARCHAR(50) UNIQUE NOT NULL,
+    supplier_id INTEGER,
+    total_amount DECIMAL(15,2) NOT NULL,
+    tax_amount DECIMAL(15,2) DEFAULT 0.00,
+    discount_amount DECIMAL(15,2) DEFAULT 0.00,
+    net_amount DECIMAL(15,2) NOT NULL,
+    payment_method VARCHAR(20) DEFAULT 'cash',
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'received', 'cancelled')),
+    purchase_date DATE NOT NULL,
+    expected_delivery DATE,
+    notes TEXT,
+    created_by INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (supplier_id) REFERENCES parties(id),
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+
+-- جدول تفاصيل المشتريات
+CREATE TABLE IF NOT EXISTS purchase_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    purchase_id INTEGER NOT NULL,
+    product_id INTEGER NOT NULL,
+    quantity INTEGER NOT NULL,
+    unit_price DECIMAL(15,2) NOT NULL,
+    total_price DECIMAL(15,2) NOT NULL,
+    FOREIGN KEY (purchase_id) REFERENCES purchases(id),
+    FOREIGN KEY (product_id) REFERENCES products(id)
+);
+
+-- جدول الإشعارات
+CREATE TABLE IF NOT EXISTS notifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    message TEXT NOT NULL,
+    type VARCHAR(20) DEFAULT 'info' CHECK (type IN ('info', 'warning', 'error', 'success')),
+    is_read BOOLEAN DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- إدراج بيانات تجريبية
+INSERT INTO products (name, description, category, sku, purchase_price, sale_price, quantity, min_quantity, created_by) VALUES 
+('منتج تجريبي 1', 'وصف المنتج التجريبي', 'إلكترونيات', 'SKU001', 100.00, 150.00, 50, 10, 1),
+('منتج تجريبي 2', 'وصف المنتج التجريبي', 'ملابس', 'SKU002', 50.00, 80.00, 30, 5, 1);
+
+INSERT INTO parties (name, type, phone, email, address, created_by) VALUES 
+('عميل تجريبي', 'customer', '0501234567', 'customer@example.com', 'الرياض، المملكة العربية السعودية', 1),
+('مورد تجريبي', 'supplier', '0507654321', 'supplier@example.com', 'جدة، المملكة العربية السعودية', 1);
 
 -- إدراج إعدادات النظام الافتراضية
 INSERT INTO system_settings (setting_key, setting_value, description) VALUES 

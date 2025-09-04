@@ -35,14 +35,54 @@ def init_database():
     
     conn = get_db_connection()
     
-    # قراءة ملف SQL وإنشاء الجداول
-    with open('database.sql', 'r', encoding='utf-8') as f:
-        sql_script = f.read()
+    try:
+        # قراءة ملف SQL وإنشاء الجداول
+        with open('database.sql', 'r', encoding='utf-8') as f:
+            sql_script = f.read()
+        
+        # تنفيذ الأوامر SQL
+        conn.executescript(sql_script)
+        conn.commit()
+        print("تم إنشاء قاعدة البيانات بنجاح")
+    except sqlite3.IntegrityError as e:
+        print(f"تحذير: {e}")
+        # إذا كان هناك خطأ في التكرار، تجاهل الخطأ
+        pass
+    except Exception as e:
+        print(f"خطأ في إنشاء قاعدة البيانات: {e}")
+    finally:
+        conn.close()
     
-    # تنفيذ الأوامر SQL
-    conn.executescript(sql_script)
-    conn.commit()
-    conn.close()
+    # التأكد من وجود المستخدم الافتراضي
+    ensure_default_user()
+
+def ensure_default_user():
+    """التأكد من وجود المستخدم الافتراضي"""
+    conn = get_db_connection()
+    
+    try:
+        # التحقق من وجود المستخدم admin
+        user = conn.execute(
+            'SELECT * FROM users WHERE username = ?', 
+            ('admin',)
+        ).fetchone()
+        
+        if not user:
+            # إنشاء المستخدم الافتراضي
+            hashed_password = hash_password('password')
+            conn.execute("""
+                INSERT INTO users (username, password, full_name, email, role) 
+                VALUES (?, ?, ?, ?, ?)
+            """, ('admin', hashed_password, 'مدير النظام', 'admin@treasury.com', 'admin'))
+            conn.commit()
+            print("تم إنشاء المستخدم الافتراضي")
+        else:
+            print("المستخدم الافتراضي موجود بالفعل")
+            
+    except Exception as e:
+        print(f"خطأ في إنشاء المستخدم الافتراضي: {e}")
+    finally:
+        conn.close()
 
 def login_required(f):
     """ديكوراتور للتحقق من تسجيل الدخول"""
@@ -57,6 +97,16 @@ def hash_password(password):
     """تشفير كلمة المرور"""
     return hashlib.sha256(password.encode()).hexdigest()
 
+def verify_password(stored_password, provided_password):
+    """التحقق من كلمة المرور"""
+    # إذا كانت كلمة المرور مشفرة بـ bcrypt
+    if stored_password.startswith('$2y$'):
+        import bcrypt
+        return bcrypt.checkpw(provided_password.encode('utf-8'), stored_password.encode('utf-8'))
+    # إذا كانت مشفرة بـ SHA-256
+    else:
+        return stored_password == hash_password(provided_password)
+
 def generate_transaction_number():
     """إنشاء رقم معاملة فريد"""
     timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
@@ -66,7 +116,53 @@ def generate_transaction_number():
 # الصفحة الرئيسية
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('modern-index.html')
+
+# صفحات منفصلة
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    return render_template('dashboard.html')
+
+@app.route('/transactions')
+@login_required
+def transactions():
+    return render_template('transactions.html')
+
+@app.route('/customers')
+@login_required
+def customers():
+    return render_template('customers.html')
+
+@app.route('/suppliers')
+@login_required
+def suppliers():
+    return render_template('customers.html')  # نفس صفحة العملاء لكن مع بيانات مختلفة
+
+@app.route('/invoices')
+@login_required
+def invoices():
+    return render_template('customers.html')  # مؤقتاً
+
+@app.route('/inventory')
+@login_required
+def inventory():
+    return render_template('customers.html')  # مؤقتاً
+
+@app.route('/treasury')
+@login_required
+def treasury():
+    return render_template('customers.html')  # مؤقتاً
+
+@app.route('/reports')
+@login_required
+def reports():
+    return render_template('customers.html')  # مؤقتاً
+
+@app.route('/settings')
+@login_required
+def settings():
+    return render_template('customers.html')  # مؤقتاً
 
 # API للمصادقة
 @app.route('/api/auth/login', methods=['POST'])
@@ -85,7 +181,7 @@ def login():
     ).fetchone()
     conn.close()
     
-    if user and user['password'] == hash_password(password):
+    if user and verify_password(user['password'], password):
         session['user_id'] = user['id']
         session['username'] = user['username']
         session['full_name'] = user['full_name']
@@ -122,101 +218,9 @@ def check_auth():
         })
     return jsonify({'authenticated': False})
 
-# API للوحة التحكم
-@app.route('/api/dashboard/stats', methods=['GET'])
-@login_required
-def get_dashboard_stats():
-    conn = get_db_connection()
-    
-    # إجمالي النقدية
-    total_cash = conn.execute(
-        'SELECT SUM(current_balance) as total FROM treasuries WHERE is_active = 1'
-    ).fetchone()['total'] or 0
-    
-    # الشيكات المستحقة
-    due_checks = conn.execute(
-        'SELECT COUNT(*) as count FROM checks WHERE due_date <= date("now") AND status = "pending"'
-    ).fetchone()['count']
-    
-    # المبيعات اليوم
-    today_sales = conn.execute(
-        'SELECT COALESCE(SUM(amount), 0) as total FROM cash_transactions WHERE type = "receipt" AND transaction_date = date("now")'
-    ).fetchone()['total']
-    
-    # المصروفات اليوم
-    today_expenses = conn.execute(
-        'SELECT COALESCE(SUM(amount), 0) as total FROM cash_transactions WHERE type = "payment" AND transaction_date = date("now")'
-    ).fetchone()['total']
-    
-    conn.close()
-    
-    return jsonify({
-        'total_cash': float(total_cash),
-        'due_checks': due_checks,
-        'today_sales': float(today_sales),
-        'today_expenses': float(today_expenses)
-    })
+# API للوحة التحكم القديم - تم حذفه لاستبداله بالنسخة المحسنة
 
-# API للمعاملات النقدية
-@app.route('/api/cash/transactions', methods=['GET'])
-@login_required
-def get_cash_transactions():
-    conn = get_db_connection()
-    
-    transactions = conn.execute('''
-        SELECT ct.*, t.name as treasury_name, p.name as party_name
-        FROM cash_transactions ct
-        LEFT JOIN treasuries t ON ct.treasury_id = t.id
-        LEFT JOIN parties p ON ct.party_id = p.id
-        ORDER BY ct.transaction_date DESC, ct.created_at DESC
-    ''').fetchall()
-    
-    conn.close()
-    
-    return jsonify([dict(transaction) for transaction in transactions])
-
-@app.route('/api/cash/transactions', methods=['POST'])
-@login_required
-def add_cash_transaction():
-    data = request.get_json()
-    
-    # التحقق من البيانات المطلوبة
-    required_fields = ['type', 'amount', 'description', 'treasury_id', 'transaction_date']
-    for field in required_fields:
-        if field not in data:
-            return jsonify({'error': f'الحقل {field} مطلوب'}), 400
-    
-    conn = get_db_connection()
-    
-    try:
-        # إنشاء رقم المعاملة
-        transaction_number = generate_transaction_number()
-        
-        # إدراج المعاملة
-        conn.execute('''
-            INSERT INTO cash_transactions 
-            (transaction_number, type, amount, description, treasury_id, party_id, transaction_date, created_by)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            transaction_number,
-            data['type'],
-            data['amount'],
-            data['description'],
-            data['treasury_id'],
-            data.get('party_id'),
-            data['transaction_date'],
-            session['user_id']
-        ))
-        
-        conn.commit()
-        conn.close()
-        
-        return jsonify({'success': True, 'message': 'تم إضافة المعاملة بنجاح'})
-        
-    except Exception as e:
-        conn.rollback()
-        conn.close()
-        return jsonify({'error': f'خطأ في إضافة المعاملة: {str(e)}'}), 500
+# API للمعاملات النقدية القديم - تم حذفه لاستبداله بالنسخة المحسنة
 
 # API للشيكات
 @app.route('/api/checks', methods=['GET'])
@@ -278,69 +282,9 @@ def add_check():
         conn.close()
         return jsonify({'error': f'خطأ في إضافة الشيك: {str(e)}'}), 500
 
-# API للخزائن
-@app.route('/api/treasuries', methods=['GET'])
-@login_required
-def get_treasuries():
-    conn = get_db_connection()
-    
-    treasuries = conn.execute('''
-        SELECT * FROM treasury_balances WHERE is_active = 1
-        ORDER BY name
-    ''').fetchall()
-    
-    conn.close()
-    
-    return jsonify([dict(treasury) for treasury in treasuries])
+# API للخزائن القديم - تم حذفه لاستبداله بالنسخة المحسنة
 
-# API للأطراف (العملاء والموردين)
-@app.route('/api/parties', methods=['GET'])
-@login_required
-def get_parties():
-    conn = get_db_connection()
-    
-    parties = conn.execute('''
-        SELECT * FROM parties WHERE is_active = 1
-        ORDER BY name
-    ''').fetchall()
-    
-    conn.close()
-    
-    return jsonify([dict(party) for party in parties])
-
-@app.route('/api/parties', methods=['POST'])
-@login_required
-def add_party():
-    data = request.get_json()
-    
-    required_fields = ['name', 'type']
-    for field in required_fields:
-        if field not in data:
-            return jsonify({'error': f'الحقل {field} مطلوب'}), 400
-    
-    conn = get_db_connection()
-    
-    try:
-        conn.execute('''
-            INSERT INTO parties (name, type, phone, email, address)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (
-            data['name'],
-            data['type'],
-            data.get('phone', ''),
-            data.get('email', ''),
-            data.get('address', '')
-        ))
-        
-        conn.commit()
-        conn.close()
-        
-        return jsonify({'success': True, 'message': 'تم إضافة الطرف بنجاح'})
-        
-    except Exception as e:
-        conn.rollback()
-        conn.close()
-        return jsonify({'error': f'خطأ في إضافة الطرف: {str(e)}'}), 500
+# API للأطراف القديم - تم حذفه لاستبداله بالنسخة المحسنة
 
 # API للتقارير
 @app.route('/api/reports/daily', methods=['GET'])
@@ -418,9 +362,477 @@ def update_settings():
         conn.close()
         return jsonify({'error': f'خطأ في تحديث الإعدادات: {str(e)}'}), 500
 
+# API للوحة التحكم
+@app.route('/api/dashboard/stats', methods=['GET'])
+@login_required
+def get_dashboard_stats():
+    """الحصول على إحصائيات لوحة التحكم"""
+    try:
+        conn = get_db_connection()
+        
+        # إجمالي الإيرادات
+        total_income = conn.execute(
+            'SELECT COALESCE(SUM(amount), 0) as total FROM cash_transactions WHERE type = "receipt"'
+        ).fetchone()['total']
+        
+        # إجمالي المصروفات
+        total_expenses = conn.execute(
+            'SELECT COALESCE(SUM(amount), 0) as total FROM cash_transactions WHERE type = "payment"'
+        ).fetchone()['total']
+        
+        # صافي الربح
+        net_profit = total_income - total_expenses
+        
+        # الرصيد النقدي
+        cash_balance = conn.execute(
+            'SELECT COALESCE(SUM(current_balance), 0) as total FROM treasuries WHERE is_active = 1'
+        ).fetchone()['total']
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'totalIncome': total_income,
+                'totalExpenses': total_expenses,
+                'netProfit': net_profit,
+                'cashBalance': cash_balance
+            }
+        })
+    except Exception as e:
+        return jsonify({'error': f'خطأ في تحميل الإحصائيات: {str(e)}'}), 500
+
+@app.route('/api/transactions/recent', methods=['GET'])
+@login_required
+def get_recent_transactions():
+    """الحصول على المعاملات الأخيرة"""
+    try:
+        conn = get_db_connection()
+        
+        transactions = conn.execute('''
+            SELECT ct.*, t.name as treasury_name
+            FROM cash_transactions ct
+            LEFT JOIN treasuries t ON ct.treasury_id = t.id
+            ORDER BY ct.created_at DESC
+            LIMIT 10
+        ''').fetchall()
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': [dict(transaction) for transaction in transactions]
+        })
+    except Exception as e:
+        return jsonify({'error': f'خطأ في تحميل المعاملات: {str(e)}'}), 500
+
+@app.route('/api/transactions', methods=['GET'])
+@login_required
+def get_all_transactions():
+    """الحصول على جميع المعاملات"""
+    try:
+        conn = get_db_connection()
+        
+        # فلاتر البحث
+        from_date = request.args.get('from_date')
+        to_date = request.args.get('to_date')
+        transaction_type = request.args.get('type')
+        
+        query = '''
+            SELECT ct.*, t.name as treasury_name
+            FROM cash_transactions ct
+            LEFT JOIN treasuries t ON ct.treasury_id = t.id
+            WHERE 1=1
+        '''
+        params = []
+        
+        if from_date:
+            query += ' AND DATE(ct.created_at) >= ?'
+            params.append(from_date)
+        
+        if to_date:
+            query += ' AND DATE(ct.created_at) <= ?'
+            params.append(to_date)
+        
+        if transaction_type:
+            query += ' AND ct.type = ?'
+            params.append(transaction_type)
+        
+        query += ' ORDER BY ct.created_at DESC'
+        
+        transactions = conn.execute(query, params).fetchall()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': [dict(transaction) for transaction in transactions]
+        })
+    except Exception as e:
+        return jsonify({'error': f'خطأ في تحميل المعاملات: {str(e)}'}), 500
+
+@app.route('/api/transactions', methods=['POST'])
+@login_required
+def add_transaction():
+    """إضافة معاملة جديدة"""
+    try:
+        data = request.get_json()
+        
+        # التحقق من البيانات المطلوبة
+        required_fields = ['type', 'amount', 'description', 'treasury_id']
+        for field in required_fields:
+            if field not in data or not data[field]:
+                return jsonify({'error': f'الحقل {field} مطلوب'}), 400
+        
+        conn = get_db_connection()
+        
+        # إنشاء رقم المعاملة
+        transaction_number = generate_transaction_number()
+        
+        # إضافة المعاملة
+        conn.execute('''
+            INSERT INTO cash_transactions 
+            (transaction_number, type, amount, description, treasury_id, created_by)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (
+            transaction_number,
+            data['type'],
+            data['amount'],
+            data['description'],
+            data['treasury_id'],
+            session['user_id']
+        ))
+        
+        # تحديث رصيد الخزينة
+        if data['type'] == 'receipt':
+            conn.execute('''
+                UPDATE treasuries 
+                SET current_balance = current_balance + ? 
+                WHERE id = ?
+            ''', (data['amount'], data['treasury_id']))
+        else:
+            conn.execute('''
+                UPDATE treasuries 
+                SET current_balance = current_balance - ? 
+                WHERE id = ?
+            ''', (data['amount'], data['treasury_id']))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'تم إضافة المعاملة بنجاح'})
+    except Exception as e:
+        return jsonify({'error': f'خطأ في إضافة المعاملة: {str(e)}'}), 500
+
+@app.route('/api/treasuries', methods=['GET'])
+@login_required
+def get_treasuries():
+    """الحصول على قائمة الخزائن"""
+    try:
+        conn = get_db_connection()
+        treasuries = conn.execute(
+            'SELECT * FROM treasuries WHERE is_active = 1 ORDER BY name'
+        ).fetchall()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': [dict(treasury) for treasury in treasuries]
+        })
+    except Exception as e:
+        return jsonify({'error': f'خطأ في تحميل الخزائن: {str(e)}'}), 500
+
+@app.route('/api/parties', methods=['GET'])
+@login_required
+def get_parties():
+    """الحصول على قائمة العملاء والموردين"""
+    try:
+        party_type = request.args.get('type', 'customer')
+        conn = get_db_connection()
+        
+        parties = conn.execute(
+            'SELECT * FROM parties WHERE type = ? AND is_active = 1 ORDER BY name',
+            (party_type,)
+        ).fetchall()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': [dict(party) for party in parties]
+        })
+    except Exception as e:
+        return jsonify({'error': f'خطأ في تحميل {party_type}: {str(e)}'}), 500
+
+@app.route('/api/parties', methods=['POST'])
+@login_required
+def add_party():
+    """إضافة عميل أو مورد جديد"""
+    try:
+        data = request.get_json()
+        
+        required_fields = ['name', 'type']
+        for field in required_fields:
+            if field not in data or not data[field]:
+                return jsonify({'error': f'الحقل {field} مطلوب'}), 400
+        
+        conn = get_db_connection()
+        
+        conn.execute('''
+            INSERT INTO parties (name, type, phone, email, address, created_by)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (
+            data['name'],
+            data['type'],
+            data.get('phone', ''),
+            data.get('email', ''),
+            data.get('address', ''),
+            session['user_id']
+        ))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': f'تم إضافة {data["type"]} بنجاح'})
+    except Exception as e:
+        return jsonify({'error': f'خطأ في إضافة {data.get("type", "العنصر")}: {str(e)}'}), 500
+
+# API للمنتجات والمخزون
+@app.route('/api/products', methods=['GET'])
+@login_required
+def get_products():
+    """الحصول على قائمة المنتجات"""
+    try:
+        conn = get_db_connection()
+        products = conn.execute(
+            'SELECT * FROM products WHERE is_active = 1 ORDER BY name'
+        ).fetchall()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': [dict(product) for product in products]
+        })
+    except Exception as e:
+        return jsonify({'error': f'خطأ في تحميل المنتجات: {str(e)}'}), 500
+
+@app.route('/api/products', methods=['POST'])
+@login_required
+def add_product():
+    """إضافة منتج جديد"""
+    try:
+        data = request.get_json()
+        
+        required_fields = ['name', 'purchase_price', 'sale_price']
+        for field in required_fields:
+            if field not in data or not data[field]:
+                return jsonify({'error': f'الحقل {field} مطلوب'}), 400
+        
+        conn = get_db_connection()
+        
+        # إنشاء SKU تلقائي
+        sku = f"SKU{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        
+        conn.execute('''
+            INSERT INTO products (name, description, category, sku, purchase_price, sale_price, quantity, min_quantity, created_by)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            data['name'],
+            data.get('description', ''),
+            data.get('category', ''),
+            sku,
+            data['purchase_price'],
+            data['sale_price'],
+            data.get('quantity', 0),
+            data.get('min_quantity', 0),
+            session['user_id']
+        ))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'تم إضافة المنتج بنجاح'})
+    except Exception as e:
+        return jsonify({'error': f'خطأ في إضافة المنتج: {str(e)}'}), 500
+
+# API للفواتير
+@app.route('/api/invoices', methods=['GET'])
+@login_required
+def get_invoices():
+    """الحصول على قائمة الفواتير"""
+    try:
+        conn = get_db_connection()
+        
+        invoices = conn.execute('''
+            SELECT i.*, p.name as customer_name
+            FROM invoices i
+            LEFT JOIN parties p ON i.customer_id = p.id
+            ORDER BY i.created_at DESC
+        ''').fetchall()
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': [dict(invoice) for invoice in invoices]
+        })
+    except Exception as e:
+        return jsonify({'error': f'خطأ في تحميل الفواتير: {str(e)}'}), 500
+
+@app.route('/api/invoices', methods=['POST'])
+@login_required
+def add_invoice():
+    """إضافة فاتورة جديدة"""
+    try:
+        data = request.get_json()
+        
+        required_fields = ['customer_id', 'amount', 'due_date']
+        for field in required_fields:
+            if field not in data or not data[field]:
+                return jsonify({'error': f'الحقل {field} مطلوب'}), 400
+        
+        conn = get_db_connection()
+        
+        # إنشاء رقم الفاتورة
+        invoice_number = f"INV{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        
+        # حساب الضريبة والمبلغ الإجمالي
+        tax_rate = 0.15  # 15% ضريبة القيمة المضافة
+        tax_amount = data['amount'] * tax_rate
+        total_amount = data['amount'] + tax_amount
+        
+        conn.execute('''
+            INSERT INTO invoices (invoice_number, customer_id, amount, tax_amount, total_amount, issue_date, due_date, description, created_by)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            invoice_number,
+            data['customer_id'],
+            data['amount'],
+            tax_amount,
+            total_amount,
+            datetime.now().date(),
+            data['due_date'],
+            data.get('description', ''),
+            session['user_id']
+        ))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'تم إضافة الفاتورة بنجاح'})
+    except Exception as e:
+        return jsonify({'error': f'خطأ في إضافة الفاتورة: {str(e)}'}), 500
+
+# API للإشعارات
+@app.route('/api/notifications', methods=['GET'])
+@login_required
+def get_notifications():
+    """الحصول على الإشعارات"""
+    try:
+        conn = get_db_connection()
+        
+        notifications = conn.execute('''
+            SELECT * FROM notifications 
+            WHERE user_id = ? 
+            ORDER BY created_at DESC 
+            LIMIT 20
+        ''', (session['user_id'],)).fetchall()
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': [dict(notification) for notification in notifications]
+        })
+    except Exception as e:
+        return jsonify({'error': f'خطأ في تحميل الإشعارات: {str(e)}'}), 500
+
+@app.route('/api/notifications/<int:notification_id>/read', methods=['POST'])
+@login_required
+def mark_notification_read(notification_id):
+    """تحديد الإشعار كمقروء"""
+    try:
+        conn = get_db_connection()
+        
+        conn.execute('''
+            UPDATE notifications 
+            SET is_read = 1 
+            WHERE id = ? AND user_id = ?
+        ''', (notification_id, session['user_id']))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'تم تحديث الإشعار'})
+    except Exception as e:
+        return jsonify({'error': f'خطأ في تحديث الإشعار: {str(e)}'}), 500
+
+# API للتقارير
+@app.route('/api/reports/financial-summary', methods=['GET'])
+@login_required
+def get_financial_summary():
+    """تقرير ملخص مالي"""
+    try:
+        conn = get_db_connection()
+        
+        # إحصائيات الشهر الحالي
+        current_month = datetime.now().strftime('%Y-%m')
+        
+        monthly_income = conn.execute('''
+            SELECT COALESCE(SUM(amount), 0) as total 
+            FROM cash_transactions 
+            WHERE type = 'receipt' 
+            AND strftime('%Y-%m', created_at) = ?
+        ''', (current_month,)).fetchone()['total']
+        
+        monthly_expenses = conn.execute('''
+            SELECT COALESCE(SUM(amount), 0) as total 
+            FROM cash_transactions 
+            WHERE type = 'payment' 
+            AND strftime('%Y-%m', created_at) = ?
+        ''', (current_month,)).fetchone()['total']
+        
+        # إحصائيات العام الحالي
+        current_year = datetime.now().year
+        
+        yearly_income = conn.execute('''
+            SELECT COALESCE(SUM(amount), 0) as total 
+            FROM cash_transactions 
+            WHERE type = 'receipt' 
+            AND strftime('%Y', created_at) = ?
+        ''', (str(current_year),)).fetchone()['total']
+        
+        yearly_expenses = conn.execute('''
+            SELECT COALESCE(SUM(amount), 0) as total 
+            FROM cash_transactions 
+            WHERE type = 'payment' 
+            AND strftime('%Y', created_at) = ?
+        ''', (str(current_year),)).fetchone()['total']
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'monthly': {
+                    'income': monthly_income,
+                    'expenses': monthly_expenses,
+                    'profit': monthly_income - monthly_expenses
+                },
+                'yearly': {
+                    'income': yearly_income,
+                    'expenses': yearly_expenses,
+                    'profit': yearly_income - yearly_expenses
+                }
+            }
+        })
+    except Exception as e:
+        return jsonify({'error': f'خطأ في تحميل التقرير: {str(e)}'}), 500
+
 if __name__ == '__main__':
     # تهيئة قاعدة البيانات
     init_database()
     
+    # الحصول على المنفذ من متغير البيئة أو استخدام المنفذ الافتراضي
+    port = int(os.environ.get('PORT', 5000))
+    
     # تشغيل الخادم
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=False, host='0.0.0.0', port=port)
