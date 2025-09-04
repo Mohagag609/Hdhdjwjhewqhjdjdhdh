@@ -13,7 +13,9 @@
     "dev:frontend": "cd frontend && npm run dev",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "build": "npm run build:frontend",
-    "start": "npm run start:backend"
+    "start": "npm run start:backend",
+    "setup:neon": "./setup-neon.sh",
+    "setup:mysql": "./start.sh"
   },
   "keywords": [
     "vault",
