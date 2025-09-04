@@ -422,5 +422,8 @@ if __name__ == '__main__':
     # تهيئة قاعدة البيانات
     init_database()
     
+    # الحصول على المنفذ من متغير البيئة أو استخدام المنفذ الافتراضي
+    port = int(os.environ.get('PORT', 5000))
+    
     # تشغيل الخادم
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=False, host='0.0.0.0', port=port)
