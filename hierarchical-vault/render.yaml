@@ -14,20 +14,20 @@ services:
       - key: PORT
         value: 10000
       - key: DB_HOST
-        value: YOUR_NEON_HOST_HERE # استبدل بمعلومات Neon الخاصة بك
+        value: ep-summer-fire-ad2my2c7-pooler.c-2.us-east-1.aws.neon.tech
       - key: DB_PORT
         value: 5432
       - key: DB_NAME
-        value: YOUR_NEON_DATABASE_HERE # استبدل باسم قاعدة البيانات
+        value: neondb
       - key: DB_USER
-        value: YOUR_NEON_USERNAME_HERE # استبدل باسم المستخدم
+        value: neondb_owner
       - key: DB_PASSWORD
-        value: YOUR_NEON_PASSWORD_HERE # استبدل بكلمة المرور
+        value: npg_YKgCwrf10JDV
       - key: DB_SSL
-        value: true # Enable SSL for Neon
+        value: true
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_EXPIRES_IN
         value: 24h
       - key: CORS_ORIGIN
-        value: https://hierarchical-vault.onrender.com # Frontend URL
+        value: https://hierarchical-vault.onrender.com
