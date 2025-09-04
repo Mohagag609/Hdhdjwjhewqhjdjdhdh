@@ -118,6 +118,52 @@ def generate_transaction_number():
 def index():
     return render_template('modern-index.html')
 
+# صفحات منفصلة
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    return render_template('dashboard.html')
+
+@app.route('/transactions')
+@login_required
+def transactions():
+    return render_template('transactions.html')
+
+@app.route('/customers')
+@login_required
+def customers():
+    return render_template('customers.html')
+
+@app.route('/suppliers')
+@login_required
+def suppliers():
+    return render_template('customers.html')  # نفس صفحة العملاء لكن مع بيانات مختلفة
+
+@app.route('/invoices')
+@login_required
+def invoices():
+    return render_template('customers.html')  # مؤقتاً
+
+@app.route('/inventory')
+@login_required
+def inventory():
+    return render_template('customers.html')  # مؤقتاً
+
+@app.route('/treasury')
+@login_required
+def treasury():
+    return render_template('customers.html')  # مؤقتاً
+
+@app.route('/reports')
+@login_required
+def reports():
+    return render_template('customers.html')  # مؤقتاً
+
+@app.route('/settings')
+@login_required
+def settings():
+    return render_template('customers.html')  # مؤقتاً
+
 # API للمصادقة
 @app.route('/api/auth/login', methods=['POST'])
 def login():

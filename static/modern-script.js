@@ -80,9 +80,8 @@ class TreasurySystem {
 
             if (data.success) {
                 this.currentUser = data.user;
-                this.showMainScreen();
-                this.updateUserInfo();
-                this.loadDashboardData();
+                // توجيه المستخدم إلى صفحة لوحة التحكم
+                window.location.href = '/dashboard';
             } else {
                 this.showAlert(data.error || 'خطأ في تسجيل الدخول', 'danger');
             }
