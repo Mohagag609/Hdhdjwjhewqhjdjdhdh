@@ -111,3 +111,13 @@ CREATE TRIGGER update_projects_updated_at BEFORE UPDATE ON projects FOR EACH ROW
 
 DROP TRIGGER IF EXISTS update_financial_reports_updated_at ON financial_reports;
 CREATE TRIGGER update_financial_reports_updated_at BEFORE UPDATE ON financial_reports FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- إدراج المستخدم الافتراضي
+INSERT INTO users (username, email, password_hash, role) VALUES 
+('admin', 'admin@example.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin')
+ON CONFLICT (username) DO NOTHING;
+
+-- إدراج خزينة رئيسية افتراضية
+INSERT INTO vaults (name, description, is_main, balance) VALUES 
+('الخزينة الرئيسية', 'الخزينة الرئيسية للنظام', true, 0.00)
+ON CONFLICT DO NOTHING;
