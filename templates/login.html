@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول - نظام الخزنة الاحترافي</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            direction: rtl;
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 50px;
+            border-radius: 25px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .logo {
+            font-size: 60px;
+            color: #667eea;
+            margin-bottom: 25px;
+            text-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        h1 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #718096;
+            margin-bottom: 40px;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            text-align: right;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .input-container {
+            position: relative;
+        }
+
+        input {
+            width: 100%;
+            padding: 18px 20px 18px 50px;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .input-icon {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+            font-size: 18px;
+            transition: color 0.3s ease;
+        }
+
+        input:focus + .input-icon {
+            color: #667eea;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .login-btn:hover::before {
+            left: 100%;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .error {
+            background: linear-gradient(135deg, #fed7d7, #feb2b2);
+            color: #c53030;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            display: none;
+            border: 1px solid #feb2b2;
+            font-weight: 500;
+        }
+
+        .loading {
+            display: none;
+        }
+
+        .loading .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .features {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .features h3 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        .feature-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            text-align: center;
+        }
+
+        .feature-item {
+            color: #718096;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .feature-item i {
+            color: #667eea;
+            font-size: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .login-container {
+                margin: 20px;
+                padding: 30px;
+            }
+            
+            .feature-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <i class="fas fa-cash-register"></i>
+        </div>
+        <h1>نظام الخزنة الاحترافي</h1>
+        <p class="subtitle">إدارة شاملة للخزائن والمعاملات المالية</p>
+        
+        <div class="error" id="errorMessage"></div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">اسم المستخدم</label>
+                <div class="input-container">
+                    <input type="text" id="username" required>
+                    <i class="fas fa-user input-icon"></i>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="password">كلمة المرور</label>
+                <div class="input-container">
+                    <input type="password" id="password" required>
+                    <i class="fas fa-lock input-icon"></i>
+                </div>
+            </div>
+            <button type="submit" class="login-btn">
+                <span class="btn-text">تسجيل الدخول</span>
+                <span class="loading">
+                    <div class="spinner"></div>
+                    جاري التحميل...
+                </span>
+            </button>
+        </form>
+
+        <div class="features">
+            <h3>المميزات الرئيسية</h3>
+            <div class="feature-list">
+                <div class="feature-item">
+                    <i class="fas fa-vault"></i>
+                    إدارة الخزائن
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-users"></i>
+                    العملاء والموردين
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-file-invoice"></i>
+                    الفواتير
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-boxes"></i>
+                    إدارة المخزون
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-chart-line"></i>
+                    التقارير
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-shield-alt"></i>
+                    الأمان
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('errorMessage');
+            const btnText = document.querySelector('.btn-text');
+            const loading = document.querySelector('.loading');
+            
+            // إظهار التحميل
+            btnText.style.display = 'none';
+            loading.style.display = 'inline-flex';
+            loading.style.alignItems = 'center';
+            loading.style.gap = '10px';
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // إخفاء رسالة الخطأ
+                    errorDiv.style.display = 'none';
+                    
+                    // إظهار رسالة نجاح
+                    errorDiv.style.background = 'linear-gradient(135deg, #c6f6d5, #9ae6b4)';
+                    errorDiv.style.color = '#22543d';
+                    errorDiv.style.borderColor = '#9ae6b4';
+                    errorDiv.textContent = 'تم تسجيل الدخول بنجاح! جاري التوجيه...';
+                    errorDiv.style.display = 'block';
+                    
+                    // توجيه إلى لوحة التحكم
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 1000);
+                } else {
+                    errorDiv.style.background = 'linear-gradient(135deg, #fed7d7, #feb2b2)';
+                    errorDiv.style.color = '#c53030';
+                    errorDiv.style.borderColor = '#feb2b2';
+                    errorDiv.textContent = data.error;
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.style.background = 'linear-gradient(135deg, #fed7d7, #feb2b2)';
+                errorDiv.style.color = '#c53030';
+                errorDiv.style.borderColor = '#feb2b2';
+                errorDiv.textContent = 'خطأ في الاتصال بالخادم';
+                errorDiv.style.display = 'block';
+            } finally {
+                // إخفاء التحميل
+                btnText.style.display = 'inline';
+                loading.style.display = 'none';
+            }
+        });
+
+        // تأثيرات بصرية إضافية
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.style.transform = 'scale(1.02)';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.style.transform = 'scale(1)';
+            });
+        });
+    </script>
+</body>
+</html>
