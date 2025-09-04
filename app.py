@@ -27,6 +27,16 @@ class Treasury(db.Model):
     def __repr__(self):
         return f'<Treasury {self.name}>'
 
+    @property
+    def balance(self):
+        balance = 0
+        for t in self.transactions:
+            if t.type == 'Receipt':
+                balance += t.amount
+            else:  # Payment
+                balance -= t.amount
+        return balance
+
 class Party(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -305,6 +315,26 @@ def income_expense_report():
         start_date=start_date_str,
         end_date=end_date_str
     )
+
+
+@app.route('/reports/treasury-summary')
+def treasury_summary():
+    main_treasuries = Treasury.query.filter_by(parent_id=None).all()
+
+    treasuries_with_balances = []
+    for treasury in main_treasuries:
+        # Start with the main treasury's own balance
+        consolidated_balance = treasury.balance
+        # Add the balance of each child
+        for child in treasury.children:
+            consolidated_balance += child.balance
+
+        treasuries_with_balances.append({
+            'treasury': treasury,
+            'consolidated_balance': consolidated_balance
+        })
+
+    return render_template('treasury_summary.html', treasuries_data=treasuries_with_balances)
 
 
 @app.cli.command("init-db")
