@@ -121,9 +121,7 @@ CREATE TABLE IF NOT EXISTS activity_logs (
 
 -- إدراج البيانات الأولية
 
--- إدراج مستخدم إداري افتراضي
-INSERT INTO users (username, password, full_name, email, role) VALUES 
-('admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'مدير النظام', 'admin@treasury.com', 'admin');
+-- ملاحظة: المستخدم الافتراضي سيتم إنشاؤه تلقائياً بواسطة التطبيق
 
 -- إدراج خزينة رئيسية افتراضية
 INSERT INTO treasuries (name, description, currency, initial_balance, current_balance) VALUES 

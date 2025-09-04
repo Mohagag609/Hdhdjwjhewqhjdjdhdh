@@ -35,14 +35,54 @@ def init_database():
     
     conn = get_db_connection()
     
-    # قراءة ملف SQL وإنشاء الجداول
-    with open('database.sql', 'r', encoding='utf-8') as f:
-        sql_script = f.read()
+    try:
+        # قراءة ملف SQL وإنشاء الجداول
+        with open('database.sql', 'r', encoding='utf-8') as f:
+            sql_script = f.read()
+        
+        # تنفيذ الأوامر SQL
+        conn.executescript(sql_script)
+        conn.commit()
+        print("تم إنشاء قاعدة البيانات بنجاح")
+    except sqlite3.IntegrityError as e:
+        print(f"تحذير: {e}")
+        # إذا كان هناك خطأ في التكرار، تجاهل الخطأ
+        pass
+    except Exception as e:
+        print(f"خطأ في إنشاء قاعدة البيانات: {e}")
+    finally:
+        conn.close()
     
-    # تنفيذ الأوامر SQL
-    conn.executescript(sql_script)
-    conn.commit()
-    conn.close()
+    # التأكد من وجود المستخدم الافتراضي
+    ensure_default_user()
+
+def ensure_default_user():
+    """التأكد من وجود المستخدم الافتراضي"""
+    conn = get_db_connection()
+    
+    try:
+        # التحقق من وجود المستخدم admin
+        user = conn.execute(
+            'SELECT * FROM users WHERE username = ?', 
+            ('admin',)
+        ).fetchone()
+        
+        if not user:
+            # إنشاء المستخدم الافتراضي
+            hashed_password = hash_password('password')
+            conn.execute("""
+                INSERT INTO users (username, password, full_name, email, role) 
+                VALUES (?, ?, ?, ?, ?)
+            """, ('admin', hashed_password, 'مدير النظام', 'admin@treasury.com', 'admin'))
+            conn.commit()
+            print("تم إنشاء المستخدم الافتراضي")
+        else:
+            print("المستخدم الافتراضي موجود بالفعل")
+            
+    except Exception as e:
+        print(f"خطأ في إنشاء المستخدم الافتراضي: {e}")
+    finally:
+        conn.close()
 
 def login_required(f):
     """ديكوراتور للتحقق من تسجيل الدخول"""
