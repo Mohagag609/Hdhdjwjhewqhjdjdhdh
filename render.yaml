@@ -1,14 +1,5 @@
 services:
-  # قاعدة البيانات
-  - type: pserv
-    name: hierarchical-vault-db
-    env: postgresql
-    plan: starter
-    region: oregon
-    databaseName:
-    databaseUser: 
-
-  # الخادم الخلفي
+  # الخادم الخلفي (مع Neon)
   - type: web
     name: hierarchical-vault-backend
     env: node
@@ -22,25 +13,17 @@ services:
       - key: PORT
         value: 10000
       - key: DB_HOST
-        fromDatabase:
-          name: hierarchical-vault-db
-          property: host
+        value: ep-summer-fire-ad2my2c7-pooler.c-2.us-east-1.aws.neon.tech
       - key: DB_PORT
-        fromDatabase:
-          name: hierarchical-vault-db
-          property: port
+        value: 5432
       - key: DB_NAME
-        fromDatabase:
-          name: hierarchical-vault-db
-          property: database
+        value: neondb
       - key: DB_USER
-        fromDatabase:
-          name: hierarchical-vault-db
-          property: user
+        value: neondb_owner
       - key: DB_PASSWORD
-        fromDatabase:
-          name: hierarchical-vault-db
-          property: password
+        value: npg_YKgCwrf10JDV
+      - key: DB_SSL
+        value: true
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_EXPIRES_IN
