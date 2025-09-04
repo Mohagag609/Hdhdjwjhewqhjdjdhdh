@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام الخزنة الاحترافي - Professional Treasury System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='modern-styles.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- شاشة تسجيل الدخول -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-container">
+            <div class="login-header">
+                <i class="fas fa-cash-register icon"></i>
+                <h1>نظام الخزنة الاحترافي</h1>
+                <p>Professional Treasury Management System</p>
+            </div>
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label for="username">اسم المستخدم</label>
+                    <input type="text" id="username" required placeholder="أدخل اسم المستخدم">
+                </div>
+                <div class="form-group">
+                    <label for="password">كلمة المرور</label>
+                    <input type="password" id="password" required placeholder="أدخل كلمة المرور">
+                </div>
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    تسجيل الدخول
+                </button>
+            </form>
+            <div class="login-footer">
+                <p>النظام الأول للخزنة الاحترافية في المنطقة</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- الشاشة الرئيسية -->
+    <div id="mainScreen" class="main-screen" style="display: none;">
+        <!-- الشريط الجانبي -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-cash-register"></i>
+                    <span>الخزنة الاحترافية</span>
+                </div>
+                <button id="sidebarToggle" class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <nav class="nav-menu">
+                <ul>
+                    <li class="nav-item">
+                        <a href="#" data-section="dashboard" class="nav-link active">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>لوحة التحكم</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" data-section="cash-flow" class="nav-link">
+                            <i class="fas fa-chart-line"></i>
+                            <span>التدفق النقدي</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" data-section="transactions" class="nav-link">
+                            <i class="fas fa-exchange-alt"></i>
+                            <span>المعاملات</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" data-section="invoices" class="nav-link">
+                            <i class="fas fa-file-invoice"></i>
+                            <span>الفواتير</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" data-section="customers" class="nav-link">
+                            <i class="fas fa-users"></i>
+                            <span>العملاء</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" data-section="suppliers" class="nav-link">
+                            <i class="fas fa-truck"></i>
+                            <span>الموردين</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" data-section="inventory" class="nav-link">
+                            <i class="fas fa-boxes"></i>
+                            <span>المخزون</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" data-section="treasury" class="nav-link">
+                            <i class="fas fa-vault"></i>
+                            <span>الخزائن</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" data-section="reports" class="nav-link">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>التقارير</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" data-section="settings" class="nav-link">
+                            <i class="fas fa-cog"></i>
+                            <span>الإعدادات</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- المحتوى الرئيسي -->
+        <div class="main-content" id="mainContent">
+            <!-- شريط التنقل العلوي -->
+            <header class="header">
+                <div class="header-left">
+                    <button id="menuToggle" class="menu-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 id="pageTitle">لوحة التحكم</h1>
+                </div>
+                <div class="header-right">
+                    <div class="user-info">
+                        <i class="fas fa-user-circle"></i>
+                        <span id="currentUser">المستخدم</span>
+                    </div>
+                    <button id="logoutBtn" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        خروج
+                    </button>
+                </div>
+            </header>
+
+            <!-- المحتوى -->
+            <div class="content">
+                <!-- لوحة التحكم -->
+                <div id="dashboard" class="content-section active">
+                    <!-- الإحصائيات الرئيسية -->
+                    <div class="stats-grid">
+                        <div class="stat-card success">
+                            <div class="stat-header">
+                                <div class="stat-icon success">
+                                    <i class="fas fa-arrow-up"></i>
+                                </div>
+                            </div>
+                            <div class="stat-value" id="totalIncome">0.00</div>
+                            <div class="stat-label">إجمالي الإيرادات</div>
+                            <div class="stat-change positive">
+                                <i class="fas fa-arrow-up"></i>
+                                <span>+12.5%</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card danger">
+                            <div class="stat-header">
+                                <div class="stat-icon danger">
+                                    <i class="fas fa-arrow-down"></i>
+                                </div>
+                            </div>
+                            <div class="stat-value" id="totalExpenses">0.00</div>
+                            <div class="stat-label">إجمالي المصروفات</div>
+                            <div class="stat-change negative">
+                                <i class="fas fa-arrow-down"></i>
+                                <span>-8.2%</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card primary">
+                            <div class="stat-header">
+                                <div class="stat-icon primary">
+                                    <i class="fas fa-wallet"></i>
+                                </div>
+                            </div>
+                            <div class="stat-value" id="netProfit">0.00</div>
+                            <div class="stat-label">صافي الربح</div>
+                            <div class="stat-change positive">
+                                <i class="fas fa-arrow-up"></i>
+                                <span>+15.3%</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card warning">
+                            <div class="stat-header">
+                                <div class="stat-icon warning">
+                                    <i class="fas fa-chart-pie"></i>
+                                </div>
+                            </div>
+                            <div class="stat-value" id="cashBalance">0.00</div>
+                            <div class="stat-label">الرصيد النقدي</div>
+                            <div class="stat-change positive">
+                                <i class="fas fa-arrow-up"></i>
+                                <span>+5.7%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- الرسوم البيانية -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">التدفق النقدي الشهري</h3>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="cashFlowChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- المعاملات الأخيرة -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">المعاملات الأخيرة</h3>
+                            <button class="btn btn-primary">
+                                <i class="fas fa-plus"></i>
+                                إضافة معاملة
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-container">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>التاريخ</th>
+                                            <th>النوع</th>
+                                            <th>المبلغ</th>
+                                            <th>الوصف</th>
+                                            <th>الحالة</th>
+                                            <th>الإجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recentTransactions">
+                                        <!-- سيتم ملؤها بالبيانات -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- التدفق النقدي -->
+                <div id="cash-flow" class="content-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">إدارة التدفق النقدي</h3>
+                            <div>
+                                <button class="btn btn-success">
+                                    <i class="fas fa-plus"></i>
+                                    إضافة تدفق
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="stats-grid">
+                                <div class="stat-card primary">
+                                    <div class="stat-value" id="inflowToday">0.00</div>
+                                    <div class="stat-label">التدفق الداخل اليوم</div>
+                                </div>
+                                <div class="stat-card danger">
+                                    <div class="stat-value" id="outflowToday">0.00</div>
+                                    <div class="stat-label">التدفق الخارج اليوم</div>
+                                </div>
+                                <div class="stat-card success">
+                                    <div class="stat-value" id="netFlowToday">0.00</div>
+                                    <div class="stat-label">صافي التدفق اليوم</div>
+                                </div>
+                            </div>
+                            <canvas id="cashFlowDetailedChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- المعاملات -->
+                <div id="transactions" class="content-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">إدارة المعاملات</h3>
+                            <div>
+                                <button class="btn btn-primary" onclick="showAddTransactionModal()">
+                                    <i class="fas fa-plus"></i>
+                                    إضافة معاملة
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <!-- فلاتر البحث -->
+                            <div class="form-group">
+                                <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                                    <input type="date" id="fromDate" class="form-input" placeholder="من تاريخ">
+                                    <input type="date" id="toDate" class="form-input" placeholder="إلى تاريخ">
+                                    <select id="transactionType" class="form-select">
+                                        <option value="">جميع الأنواع</option>
+                                        <option value="income">إيراد</option>
+                                        <option value="expense">مصروف</option>
+                                    </select>
+                                    <button class="btn btn-primary" onclick="filterTransactions()">
+                                        <i class="fas fa-search"></i>
+                                        بحث
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="table-container">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>رقم المعاملة</th>
+                                            <th>التاريخ</th>
+                                            <th>النوع</th>
+                                            <th>المبلغ</th>
+                                            <th>الوصف</th>
+                                            <th>الخزينة</th>
+                                            <th>الإجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="transactionsTable">
+                                        <!-- سيتم ملؤها بالبيانات -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- الفواتير -->
+                <div id="invoices" class="content-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">إدارة الفواتير</h3>
+                            <div>
+                                <button class="btn btn-success" onclick="showAddInvoiceModal()">
+                                    <i class="fas fa-plus"></i>
+                                    إضافة فاتورة
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="stats-grid">
+                                <div class="stat-card primary">
+                                    <div class="stat-value" id="totalInvoices">0</div>
+                                    <div class="stat-label">إجمالي الفواتير</div>
+                                </div>
+                                <div class="stat-card success">
+                                    <div class="stat-value" id="paidInvoices">0</div>
+                                    <div class="stat-label">الفواتير المدفوعة</div>
+                                </div>
+                                <div class="stat-card warning">
+                                    <div class="stat-value" id="pendingInvoices">0</div>
+                                    <div class="stat-label">الفواتير المعلقة</div>
+                                </div>
+                                <div class="stat-card danger">
+                                    <div class="stat-value" id="overdueInvoices">0</div>
+                                    <div class="stat-label">الفواتير المتأخرة</div>
+                                </div>
+                            </div>
+                            
+                            <div class="table-container">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>رقم الفاتورة</th>
+                                            <th>التاريخ</th>
+                                            <th>العميل</th>
+                                            <th>المبلغ</th>
+                                            <th>الحالة</th>
+                                            <th>تاريخ الاستحقاق</th>
+                                            <th>الإجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="invoicesTable">
+                                        <!-- سيتم ملؤها بالبيانات -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- العملاء -->
+                <div id="customers" class="content-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">إدارة العملاء</h3>
+                            <div>
+                                <button class="btn btn-primary" onclick="showAddCustomerModal()">
+                                    <i class="fas fa-plus"></i>
+                                    إضافة عميل
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-container">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>الاسم</th>
+                                            <th>الهاتف</th>
+                                            <th>البريد الإلكتروني</th>
+                                            <th>العنوان</th>
+                                            <th>إجمالي المشتريات</th>
+                                            <th>الإجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="customersTable">
+                                        <!-- سيتم ملؤها بالبيانات -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- الموردين -->
+                <div id="suppliers" class="content-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">إدارة الموردين</h3>
+                            <div>
+                                <button class="btn btn-primary" onclick="showAddSupplierModal()">
+                                    <i class="fas fa-plus"></i>
+                                    إضافة مورد
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-container">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>الاسم</th>
+                                            <th>الهاتف</th>
+                                            <th>البريد الإلكتروني</th>
+                                            <th>العنوان</th>
+                                            <th>إجمالي المشتريات</th>
+                                            <th>الإجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="suppliersTable">
+                                        <!-- سيتم ملؤها بالبيانات -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- المخزون -->
+                <div id="inventory" class="content-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">إدارة المخزون</h3>
+                            <div>
+                                <button class="btn btn-primary" onclick="showAddProductModal()">
+                                    <i class="fas fa-plus"></i>
+                                    إضافة منتج
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="stats-grid">
+                                <div class="stat-card primary">
+                                    <div class="stat-value" id="totalProducts">0</div>
+                                    <div class="stat-label">إجمالي المنتجات</div>
+                                </div>
+                                <div class="stat-card warning">
+                                    <div class="stat-value" id="lowStockProducts">0</div>
+                                    <div class="stat-label">منتجات قليلة المخزون</div>
+                                </div>
+                                <div class="stat-card danger">
+                                    <div class="stat-value" id="outOfStockProducts">0</div>
+                                    <div class="stat-label">منتجات نافدة</div>
+                                </div>
+                            </div>
+                            
+                            <div class="table-container">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>اسم المنتج</th>
+                                            <th>الكمية المتاحة</th>
+                                            <th>سعر الشراء</th>
+                                            <th>سعر البيع</th>
+                                            <th>التصنيف</th>
+                                            <th>الحالة</th>
+                                            <th>الإجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="inventoryTable">
+                                        <!-- سيتم ملؤها بالبيانات -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- الخزائن -->
+                <div id="treasury" class="content-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">إدارة الخزائن</h3>
+                            <div>
+                                <button class="btn btn-primary" onclick="showAddTreasuryModal()">
+                                    <i class="fas fa-plus"></i>
+                                    إضافة خزينة
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="stats-grid">
+                                <div class="stat-card primary">
+                                    <div class="stat-value" id="totalTreasuries">0</div>
+                                    <div class="stat-label">إجمالي الخزائن</div>
+                                </div>
+                                <div class="stat-card success">
+                                    <div class="stat-value" id="activeTreasuries">0</div>
+                                    <div class="stat-label">الخزائن النشطة</div>
+                                </div>
+                            </div>
+                            
+                            <div class="table-container">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>اسم الخزينة</th>
+                                            <th>الوصف</th>
+                                            <th>العملة</th>
+                                            <th>الرصيد الحالي</th>
+                                            <th>الحالة</th>
+                                            <th>الإجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="treasuriesTable">
+                                        <!-- سيتم ملؤها بالبيانات -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- التقارير -->
+                <div id="reports" class="content-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">التقارير المالية</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="stats-grid">
+                                <div class="stat-card primary">
+                                    <div class="stat-value">تقرير الأرباح والخسائر</div>
+                                    <div class="stat-label">
+                                        <button class="btn btn-primary">
+                                            <i class="fas fa-download"></i>
+                                            تحميل
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="stat-card success">
+                                    <div class="stat-value">تقرير التدفق النقدي</div>
+                                    <div class="stat-label">
+                                        <button class="btn btn-success">
+                                            <i class="fas fa-download"></i>
+                                            تحميل
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="stat-card warning">
+                                    <div class="stat-value">تقرير المبيعات</div>
+                                    <div class="stat-label">
+                                        <button class="btn btn-warning">
+                                            <i class="fas fa-download"></i>
+                                            تحميل
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="stat-card danger">
+                                    <div class="stat-value">تقرير المصروفات</div>
+                                    <div class="stat-label">
+                                        <button class="btn btn-danger">
+                                            <i class="fas fa-download"></i>
+                                            تحميل
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- الإعدادات -->
+                <div id="settings" class="content-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">إعدادات النظام</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label class="form-label">اسم الشركة</label>
+                                <input type="text" class="form-input" id="companyName" value="شركة الخزنة الاحترافية">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">العملة الأساسية</label>
+                                <select class="form-select" id="baseCurrency">
+                                    <option value="SAR">ريال سعودي (SAR)</option>
+                                    <option value="USD">دولار أمريكي (USD)</option>
+                                    <option value="EUR">يورو (EUR)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">المنطقة الزمنية</label>
+                                <select class="form-select" id="timezone">
+                                    <option value="Asia/Riyadh">الرياض (GMT+3)</option>
+                                    <option value="UTC">UTC</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary">
+                                <i class="fas fa-save"></i>
+                                حفظ الإعدادات
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- النوافذ المنبثقة -->
+    <div id="modals"></div>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='modern-script.js') }}"></script>
+</body>
+</html>
