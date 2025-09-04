@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<form method="post" action="{{ action_url }}">
+  <div class="mb-3">
+    <label for="name" class="form-label">الاسم</label>
+    <input type="text" class="form-control" id="name" name="name" value="{{ party.name if party else '' }}" required>
+  </div>
+  <div class="mb-3">
+    <label for="type" class="form-label">النوع</label>
+    <select class="form-select" id="type" name="type" required>
+      <option value="Client" {% if party and party.type == 'Client' %}selected{% endif %}>عميل</option>
+      <option value="Supplier" {% if party and party.type == 'Supplier' %}selected{% endif %}>مورد</option>
+    </select>
+  </div>
+  <button type="submit" class="btn btn-primary">حفظ</button>
+  <a href="{{ url_for('list_parties') }}" class="btn btn-secondary">إلغاء</a>
+</form>
+{% endblock %}

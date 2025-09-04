@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}كشف حساب خزينة {{ treasury.name }}{% endblock %}
+
+{% block page_title %}كشف حساب خزينة: {{ treasury.name }}{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+  <div class="card-header">
+    ملخص الحساب
+  </div>
+  <div class="card-body">
+    <h5 class="card-title">الرصيد النهائي: <span class="badge bg-primary">{{ "%.2f"|format(balance) }}</span></h5>
+  </div>
+</div>
+
+<button onclick="window.print();" class="btn btn-secondary mb-3 no-print">طباعة التقرير</button>
+
+<table class="table table-bordered">
+  <thead class="table-light">
+    <tr>
+      <th>التاريخ</th>
+      <th>الوصف</th>
+      <th>سند قبض (إيراد)</th>
+      <th>سند صرف (مصروف)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for transaction in transactions %}
+      <tr>
+        <td>{{ transaction.date.strftime('%Y-%m-%d') }}</td>
+        <td>{{ transaction.description }}</td>
+        <td>
+          {% if transaction.type == 'Receipt' %}
+            <span class="text-success">{{ "%.2f"|format(transaction.amount) }}</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if transaction.type == 'Payment' %}
+            <span class="text-danger">{{ "%.2f"|format(transaction.amount) }}</span>
+          {% endif %}
+        </td>
+      </tr>
+    {% else %}
+      <tr>
+        <td colspan="4" class="text-center">لا توجد حركات لهذه الخزينة.</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<style>
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+    main.container, main.container * {
+      visibility: visible;
+    }
+    main.container {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+    }
+    .no-print, nav {
+      display: none !important;
+    }
+  }
+</style>
+{% endblock %}

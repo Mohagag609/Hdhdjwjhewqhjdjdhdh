@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body">
+    <form method="post" action="{{ url_for('add_transaction', type=transaction_type) }}">
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="date" class="form-label">التاريخ</label>
+          <input type="date" class="form-control" id="date" name="date" required>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="amount" class="form-label">المبلغ</label>
+          <input type="number" step="0.01" class="form-control" id="amount" name="amount" required>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label for="description" class="form-label">الوصف</label>
+        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+      </div>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="treasury_id" class="form-label">الخزينة</label>
+          <select class="form-select" id="treasury_id" name="treasury_id" required>
+            <option value="" disabled selected>اختر خزينة...</option>
+            {% for treasury in treasuries %}
+              <option value="{{ treasury.id }}">{{ treasury.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="category_id" class="form-label">
+            {% if transaction_type == 'Receipt' %}فئة الإيراد{% else %}فئة المصروف{% endif %}
+          </label>
+          <select class="form-select" id="category_id" name="category_id" required>
+            <option value="" disabled selected>اختر فئة...</option>
+            {% for category in categories %}
+              <option value="{{ category.id }}">{{ category.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label for="party_id" class="form-label">الطرف (عميل/مورد) - اختياري</label>
+        <select class="form-select" id="party_id" name="party_id">
+          <option value="">-- لا يوجد --</option>
+          {% for party in parties %}
+            <option value="{{ party.id }}">{{ party.name }} ({{ 'عميل' if party.type == 'Client' else 'مورد' }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">حفظ الحركة</button>
+      <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">إلغاء</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

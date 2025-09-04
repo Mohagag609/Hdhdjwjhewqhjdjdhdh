@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<form method="post" action="{{ action_url }}">
+  <div class="mb-3">
+    <label for="name" class="form-label">اسم الخزينة</label>
+    <input type="text" class="form-control" id="name" name="name" value="{{ treasury.name if treasury else '' }}" required>
+  </div>
+  <div class="mb-3">
+    <label for="parent_id" class="form-label">الخزينة الرئيسية (اتركه فارغاً لجعلها خزينة رئيسية)</label>
+    <select class="form-select" id="parent_id" name="parent_id">
+      <option value="">-- خزينة رئيسية --</option>
+      {% for main_treasury in main_treasuries %}
+        {# Prevent a treasury from being its own parent, or a sub-treasury from being a main one in the edit form #}
+        {% if not treasury or treasury.id != main_treasury.id %}
+          <option value="{{ main_treasury.id }}" {% if treasury and treasury.parent_id == main_treasury.id %}selected{% endif %}>
+            {{ main_treasury.name }}
+          </option>
+        {% endif %}
+      {% endfor %}
+    </select>
+  </div>
+  <button type="submit" class="btn btn-primary">حفظ</button>
+  <a href="{{ url_for('list_treasuries') }}" class="btn btn-secondary">إلغاء</a>
+</form>
+{% endblock %}

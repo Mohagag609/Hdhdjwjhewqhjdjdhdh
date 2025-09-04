@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}تقرير الإيرادات والمصروفات{% endblock %}
+
+{% block page_title %}تقرير الإيرادات والمصروفات{% endblock %}
+
+{% block content %}
+<div class="card mb-4 no-print">
+  <div class="card-header">
+    تصفية حسب التاريخ
+  </div>
+  <div class="card-body">
+    <form method="get" action="{{ url_for('income_expense_report') }}">
+      <div class="row align-items-end">
+        <div class="col-md-5">
+          <label for="start_date" class="form-label">من تاريخ</label>
+          <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date if start_date }}">
+        </div>
+        <div class="col-md-5">
+          <label for="end_date" class="form-label">إلى تاريخ</label>
+          <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date if end_date }}">
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-primary w-100">تصفية</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="row text-center">
+    <div class="col-md-4">
+        <div class="card text-white bg-success mb-3">
+            <div class="card-header">إجمالي الإيرادات</div>
+            <div class="card-body">
+                <h4 class="card-title">{{ "%.2f"|format(total_income) }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-danger mb-3">
+            <div class="card-header">إجمالي المصروفات</div>
+            <div class="card-body">
+                <h4 class="card-title">{{ "%.2f"|format(total_expense) }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white {% if net_total >= 0 %}bg-info{% else %}bg-secondary{% endif %} mb-3">
+            <div class="card-header">صافي الدخل</div>
+            <div class="card-body">
+                <h4 class="card-title">{{ "%.2f"|format(net_total) }}</h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<button onclick="window.print();" class="btn btn-secondary mt-3 no-print">طباعة التقرير</button>
+
+<style>
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+    main.container, main.container * {
+      visibility: visible;
+    }
+    main.container {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+    }
+    .no-print, nav {
+      display: none !important;
+    }
+  }
+</style>
+{% endblock %}

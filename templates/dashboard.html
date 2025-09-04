@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}لوحة التحكم{% endblock %}
+
+{% block page_title %}لوحة التحكم{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+  <div class="col-md-6">
+    <div class="d-grid gap-2">
+      <a href="{{ url_for('add_transaction', type='Receipt') }}" class="btn btn-lg btn-success">إضافة سند قبض جديد</a>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="d-grid gap-2">
+      <a href="{{ url_for('add_transaction', type='Payment') }}" class="btn btn-lg btn-danger">إضافة سند صرف جديد</a>
+    </div>
+  </div>
+</div>
+
+<h3 class="mt-5">آخر 10 حركات</h3>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>التاريخ</th>
+      <th>النوع</th>
+      <th>الوصف</th>
+      <th>المبلغ</th>
+      <th>الخزينة</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for transaction in transactions %}
+      <tr>
+        <td>{{ transaction.date.strftime('%Y-%m-%d') }}</td>
+        <td>
+          {% if transaction.type == 'Receipt' %}
+            <span class="badge bg-success">قبض</span>
+          {% else %}
+            <span class="badge bg-danger">صرف</span>
+          {% endif %}
+        </td>
+        <td>{{ transaction.description }}</td>
+        <td>{{ "%.2f"|format(transaction.amount) }}</td>
+        <td>{{ transaction.treasury.name }}</td>
+      </tr>
+    {% else %}
+      <tr>
+        <td colspan="5" class="text-center">لا توجد حركات مسجلة.</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
