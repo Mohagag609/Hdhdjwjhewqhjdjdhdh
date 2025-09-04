@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار تسجيل الدخول - Debug</title>
+    <style>
+        body {
+            font-family: 'Cairo', Arial, sans-serif;
+            direction: rtl;
+            background-color: #f9fafb;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background: #2563eb;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1d4ed8;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .success {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        .error {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+        .info {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+            color: #1e40af;
+        }
+        .step {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f3f4f6;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 اختبار تسجيل الدخول - Debug</h1>
+        
+        <div class="step">
+            <h3>الخطوة 1: اختبار API</h3>
+            <button onclick="testAPI()">اختبار API</button>
+            <div id="apiResult"></div>
+        </div>
+        
+        <div class="step">
+            <h3>الخطوة 2: اختبار تسجيل الدخول</h3>
+            <div class="form-group">
+                <label>API URL:</label>
+                <input type="text" id="apiUrl" value="https://hierarchical-vault.onrender.com/api">
+            </div>
+            
+            <div class="form-group">
+                <label>اسم المستخدم:</label>
+                <input type="text" id="username" value="admin">
+            </div>
+            
+            <div class="form-group">
+                <label>كلمة المرور:</label>
+                <input type="password" id="password" value="password">
+            </div>
+            
+            <button onclick="testLogin()">اختبار تسجيل الدخول</button>
+            <div id="loginResult"></div>
+        </div>
+        
+        <div class="step">
+            <h3>الخطوة 3: اختبار Frontend</h3>
+            <button onclick="testFrontend()">اختبار Frontend</button>
+            <div id="frontendResult"></div>
+        </div>
+    </div>
+
+    <script>
+        async function testAPI() {
+            const apiUrl = document.getElementById('apiUrl').value;
+            const resultDiv = document.getElementById('apiResult');
+            
+            resultDiv.innerHTML = 'جاري اختبار API...';
+            resultDiv.className = 'result info';
+            
+            try {
+                const response = await fetch(`${apiUrl}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `✅ API يعمل!\n\nالنتيجة:\n${JSON.stringify(data, null, 2)}`;
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.innerHTML = `❌ API لا يعمل!\n\nالخطأ:\n${JSON.stringify(data, null, 2)}`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `❌ خطأ في الاتصال!\n\nالخطأ:\n${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+        
+        async function testLogin() {
+            const apiUrl = document.getElementById('apiUrl').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('loginResult');
+            
+            resultDiv.innerHTML = 'جاري اختبار تسجيل الدخول...';
+            resultDiv.className = 'result info';
+            
+            try {
+                console.log('إرسال طلب تسجيل الدخول...');
+                console.log('URL:', `${apiUrl}/auth/login`);
+                console.log('Data:', { username, password });
+                
+                const response = await fetch(`${apiUrl}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `✅ نجح تسجيل الدخول!\n\nالنتيجة:\n${JSON.stringify(data, null, 2)}`;
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.innerHTML = `❌ فشل تسجيل الدخول!\n\nالخطأ:\n${JSON.stringify(data, null, 2)}`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                console.error('خطأ في تسجيل الدخول:', error);
+                resultDiv.innerHTML = `❌ خطأ في الاتصال!\n\nالخطأ:\n${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+        
+        async function testFrontend() {
+            const resultDiv = document.getElementById('frontendResult');
+            
+            resultDiv.innerHTML = 'جاري اختبار Frontend...';
+            resultDiv.className = 'result info';
+            
+            try {
+                // محاولة الوصول إلى الصفحة الرئيسية
+                const response = await fetch(window.location.origin);
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `✅ Frontend يعمل!\n\nStatus: ${response.status}`;
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.innerHTML = `❌ Frontend لا يعمل!\n\nStatus: ${response.status}`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `❌ خطأ في Frontend!\n\nالخطأ:\n${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+        
+        // تشغيل اختبار API تلقائياً
+        window.onload = function() {
+            testAPI();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+services:
+  # الخادم الخلفي (مع Neon)
+  - type: web
+    name: hierarchical-vault-backend
+    env: node
+    plan: free
+    region: oregon
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DB_HOST
+        value: YOUR_NEON_HOST_HERE # استبدل بمعلومات Neon الخاصة بك
+      - key: DB_PORT
+        value: 5432
+      - key: DB_NAME
+        value: YOUR_NEON_DATABASE_HERE # استبدل باسم قاعدة البيانات
+      - key: DB_USER
+        value: YOUR_NEON_USERNAME_HERE # استبدل باسم المستخدم
+      - key: DB_PASSWORD
+        value: YOUR_NEON_PASSWORD_HERE # استبدل بكلمة المرور
+      - key: DB_SSL
+        value: true # Enable SSL for Neon
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 24h
+      - key: CORS_ORIGIN
+        value: https://hierarchical-vault-frontend.onrender.com # Frontend URL
+
+  # الواجهة الأمامية
+  - type: web
+    name: hierarchical-vault-frontend
+    env: static
+    plan: free
+    region: oregon
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://hierarchical-vault-backend.onrender.com/api # Backend API URL
