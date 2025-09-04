@@ -1,0 +1,61 @@
+services:
+  # قاعدة البيانات
+  - type: pserv
+    name: hierarchical-vault-db
+    env: postgresql
+    plan: starter
+    region: oregon
+    databaseName: hierarchical_vault
+    databaseUser: hierarchical_vault_user
+
+  # الخادم الخلفي
+  - type: web
+    name: hierarchical-vault-backend
+    env: node
+    plan: starter
+    region: oregon
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DB_HOST
+        fromDatabase:
+          name: hierarchical-vault-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: hierarchical-vault-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: hierarchical-vault-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: hierarchical-vault-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: hierarchical-vault-db
+          property: password
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 24h
+      - key: CORS_ORIGIN
+        value: https://hierarchical-vault-frontend.onrender.com
+
+  # الواجهة الأمامية
+  - type: web
+    name: hierarchical-vault-frontend
+    env: static
+    plan: starter
+    region: oregon
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://hierarchical-vault-backend.onrender.com/api
