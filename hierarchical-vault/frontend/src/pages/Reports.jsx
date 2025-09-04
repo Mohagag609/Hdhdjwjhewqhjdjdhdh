@@ -5,6 +5,7 @@ import { reportService, vaultService, projectService } from '../services/api';
 import Loading from '../components/Loading';
 import Error from '../components/Error';
 import EmptyState from '../components/EmptyState';
+import ExportButton from '../components/ExportButton';
 import {
   CurrencyDollarIcon,
   PlusIcon,
@@ -160,6 +161,20 @@ const Reports = () => {
           </p>
         </div>
         <div className="flex items-center space-x-3 space-x-reverse">
+          <ExportButton
+            data={reports}
+            filename="financial-reports"
+            title="التقارير المالية"
+            columns={[
+              { key: 'type', label: 'النوع', type: 'text' },
+              { key: 'amount', label: 'المبلغ', type: 'currency' },
+              { key: 'description', label: 'الوصف', type: 'text' },
+              { key: 'vault_name', label: 'الخزينة', type: 'text' },
+              { key: 'project_name', label: 'المشروع', type: 'text' },
+              { key: 'report_date', label: 'التاريخ', type: 'date' },
+              { key: 'user_name', label: 'المستخدم', type: 'text' },
+            ]}
+          />
           <button
             onClick={() => setShowFilters(!showFilters)}
             className="btn-secondary flex items-center space-x-2 space-x-reverse"

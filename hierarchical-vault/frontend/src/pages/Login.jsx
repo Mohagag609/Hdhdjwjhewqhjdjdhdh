@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useNotifications } from '../context/NotificationContext';
 import Loading from '../components/Loading';
 import Error from '../components/Error';
 
@@ -14,6 +15,7 @@ const Login = () => {
   const [errorMessage, setErrorMessage] = useState('');
 
   const { login, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { showSuccess, showError } = useNotifications();
   const navigate = useNavigate();
 
   // إعادة التوجيه إذا كان المستخدم مسجل الدخول بالفعل
@@ -75,8 +77,10 @@ const Login = () => {
       const result = await login(formData);
       
       if (result.success) {
+        showSuccess('تم تسجيل الدخول بنجاح');
         navigate('/');
       } else {
+        showError(result.message);
         setErrorMessage(result.message);
       }
     } catch (error) {

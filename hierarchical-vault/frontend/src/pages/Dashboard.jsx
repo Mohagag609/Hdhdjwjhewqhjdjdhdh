@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { vaultService, projectService, reportService } from '../services/api';
 import Loading from '../components/Loading';
 import Error from '../components/Error';
+import Chart from '../components/Chart';
 import {
   FolderIcon,
   DocumentTextIcon,
@@ -23,6 +24,7 @@ const Dashboard = () => {
     netProfit: 0,
   });
   const [recentReports, setRecentReports] = useState([]);
+  const [chartData, setChartData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -51,6 +53,13 @@ const Dashboard = () => {
       });
 
       setRecentReports(reportsResponse.data.data);
+
+      // إعداد بيانات المخططات
+      const vaultsData = vaultsResponse.data.data.map(vault => ({
+        label: vault.name,
+        value: parseFloat(vault.balance)
+      }));
+      setChartData(vaultsData);
     } catch (err) {
       setError('فشل في تحميل بيانات لوحة التحكم');
       console.error('خطأ في تحميل بيانات لوحة التحكم:', err);
@@ -250,6 +259,25 @@ const Dashboard = () => {
             </div>
           )}
         </div>
+      </div>
+
+      {/* المخططات البيانية */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Chart
+          data={chartData}
+          type="bar"
+          title="أرصدة الخزائن"
+          height={300}
+        />
+        <Chart
+          data={[
+            { label: 'إيرادات', value: stats.totalIncome },
+            { label: 'مصروفات', value: stats.totalExpense }
+          ]}
+          type="pie"
+          title="توزيع الإيرادات والمصروفات"
+          height={300}
+        />
       </div>
     </div>
   );

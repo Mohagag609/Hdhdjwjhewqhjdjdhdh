@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useNotifications } from '../context/NotificationContext';
 import { vaultService } from '../services/api';
 import Loading from '../components/Loading';
 import Error from '../components/Error';
@@ -16,6 +17,7 @@ import {
 
 const Vaults = () => {
   const { user } = useAuth();
+  const { showSuccess, showError } = useNotifications();
   const [vaults, setVaults] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -53,9 +55,10 @@ const Vaults = () => {
       setVaults(prev => prev.filter(v => v.id !== vaultToDelete.id));
       setShowDeleteModal(false);
       setVaultToDelete(null);
+      showSuccess('تم حذف الخزينة بنجاح');
     } catch (err) {
       console.error('خطأ في حذف الخزينة:', err);
-      alert('فشل في حذف الخزينة');
+      showError('فشل في حذف الخزينة');
     }
   };
 
