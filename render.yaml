@@ -4,7 +4,6 @@ services:
     name: hierarchical-vault-backend
     env: node
     plan: starter
-    region: oregon
     buildCommand: cd backend && npm install
     startCommand: cd backend && npm start
     envVars:
@@ -36,7 +35,6 @@ services:
     name: hierarchical-vault-frontend
     env: static
     plan: starter
-    region: oregon
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: frontend/dist
     envVars:
