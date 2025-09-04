@@ -5,8 +5,8 @@ services:
     env: postgresql
     plan: starter
     region: oregon
-    databaseName: hierarchical_vault
-    databaseUser: hierarchical_vault_user
+    databaseName:
+    databaseUser: 
 
   # الخادم الخلفي
   - type: web
