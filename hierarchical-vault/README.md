@@ -147,6 +147,10 @@ docker-compose down
 
 ### 🌐 النشر على Render
 
+#### مع Neon (مستحسن):
+راجع ملف [RENDER_NEON_DEPLOYMENT.md](RENDER_NEON_DEPLOYMENT.md) للحصول على تعليمات مفصلة للنشر على Render مع Neon.
+
+#### مع قاعدة بيانات منفصلة:
 راجع ملف [DEPLOYMENT.md](DEPLOYMENT.md) للحصول على تعليمات مفصلة للنشر على Render.
 
 ## الاستخدام
