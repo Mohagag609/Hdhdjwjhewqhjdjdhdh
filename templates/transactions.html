@@ -819,6 +819,40 @@
             }
         }
 
+        // تعديل معاملة
+        async function editTransaction(transactionId) {
+            // يمكن إضافة نافذة تعديل هنا
+            showSuccess('وظيفة التعديل قيد التطوير');
+        }
+
+        // حذف معاملة
+        async function deleteTransaction(transactionId) {
+            if (!confirm('هل أنت متأكد من حذف هذه المعاملة؟')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/transactions/${transactionId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showSuccess('تم حذف المعاملة بنجاح');
+                    loadTransactions();
+                } else {
+                    showError(result.error || 'خطأ في حذف المعاملة');
+                }
+            } catch (error) {
+                console.error('Error deleting transaction:', error);
+                showError('خطأ في الاتصال بالخادم');
+            }
+        }
+
         // إغلاق النافذة
         function closeModal(modalId) {
             document.getElementById(modalId).style.display = 'none';

@@ -235,6 +235,69 @@ def api_add_treasury():
         conn.close()
         return jsonify({'error': f'خطأ في إضافة الخزينة: {str(e)}'}), 500
 
+@app.route('/api/treasuries/<int:treasury_id>', methods=['PUT'])
+@login_required
+@admin_required
+def api_update_treasury(treasury_id):
+    data = request.get_json()
+    
+    if not data.get('name'):
+        return jsonify({'error': 'اسم الخزينة مطلوب'}), 400
+    
+    conn = get_db_connection()
+    try:
+        # الحصول على البيانات القديمة للتسجيل
+        old_treasury = conn.execute('SELECT * FROM treasuries WHERE id = ?', (treasury_id,)).fetchone()
+        
+        conn.execute('''
+            UPDATE treasuries 
+            SET name = ?, parent_id = ?, currency = ?, description = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        ''', (
+            data['name'],
+            data.get('parent_id'),
+            data.get('currency', 'SAR'),
+            data.get('description', ''),
+            treasury_id
+        ))
+        
+        conn.commit()
+        
+        log_activity('تعديل خزينة', 'treasuries', treasury_id, dict(old_treasury) if old_treasury else None, data)
+        
+        conn.close()
+        return jsonify({'success': True, 'message': 'تم تحديث الخزينة بنجاح'})
+    except Exception as e:
+        conn.close()
+        return jsonify({'error': f'خطأ في تحديث الخزينة: {str(e)}'}), 500
+
+@app.route('/api/treasuries/<int:treasury_id>', methods=['DELETE'])
+@login_required
+@admin_required
+def api_delete_treasury(treasury_id):
+    conn = get_db_connection()
+    try:
+        # التحقق من وجود معاملات مرتبطة بالخزينة
+        transactions_count = conn.execute('SELECT COUNT(*) as count FROM transactions WHERE treasury_id = ?', (treasury_id,)).fetchone()['count']
+        
+        if transactions_count > 0:
+            conn.close()
+            return jsonify({'error': 'لا يمكن حذف الخزينة لوجود معاملات مرتبطة بها'}), 400
+        
+        # الحصول على البيانات للتسجيل
+        old_treasury = conn.execute('SELECT * FROM treasuries WHERE id = ?', (treasury_id,)).fetchone()
+        
+        conn.execute('UPDATE treasuries SET is_active = 0 WHERE id = ?', (treasury_id,))
+        conn.commit()
+        
+        log_activity('حذف خزينة', 'treasuries', treasury_id, dict(old_treasury) if old_treasury else None, None)
+        
+        conn.close()
+        return jsonify({'success': True, 'message': 'تم حذف الخزينة بنجاح'})
+    except Exception as e:
+        conn.close()
+        return jsonify({'error': f'خطأ في حذف الخزينة: {str(e)}'}), 500
+
 
 # APIs للمعاملات
 @app.route('/api/transactions')
@@ -313,6 +376,118 @@ def api_add_transaction():
     except Exception as e:
         conn.close()
         return jsonify({'error': f'خطأ في إضافة المعاملة: {str(e)}'}), 500
+
+@app.route('/api/transactions/<int:transaction_id>', methods=['PUT'])
+@login_required
+def api_update_transaction(transaction_id):
+    data = request.get_json()
+    
+    required_fields = ['type', 'amount', 'description', 'treasury_id']
+    for field in required_fields:
+        if not data.get(field):
+            return jsonify({'error': f'الحقل {field} مطلوب'}), 400
+    
+    conn = get_db_connection()
+    
+    try:
+        # الحصول على البيانات القديمة
+        old_transaction = conn.execute('SELECT * FROM transactions WHERE id = ?', (transaction_id,)).fetchone()
+        
+        if not old_transaction:
+            conn.close()
+            return jsonify({'error': 'المعاملة غير موجودة'}), 404
+        
+        # إعادة الرصيد القديم
+        if old_transaction['type'] == 'income':
+            conn.execute('''
+                UPDATE treasuries 
+                SET balance = balance - ? 
+                WHERE id = ?
+            ''', (old_transaction['amount'], old_transaction['treasury_id']))
+        elif old_transaction['type'] == 'expense':
+            conn.execute('''
+                UPDATE treasuries 
+                SET balance = balance + ? 
+                WHERE id = ?
+            ''', (old_transaction['amount'], old_transaction['treasury_id']))
+        
+        # تحديث المعاملة
+        conn.execute('''
+            UPDATE transactions 
+            SET type = ?, amount = ?, description = ?, reference = ?, treasury_id = ?, transaction_date = ?
+            WHERE id = ?
+        ''', (
+            data['type'],
+            data['amount'],
+            data['description'],
+            data.get('reference', ''),
+            data['treasury_id'],
+            data.get('transaction_date', datetime.now()),
+            transaction_id
+        ))
+        
+        # تطبيق الرصيد الجديد
+        if data['type'] == 'income':
+            conn.execute('''
+                UPDATE treasuries 
+                SET balance = balance + ? 
+                WHERE id = ?
+            ''', (data['amount'], data['treasury_id']))
+        elif data['type'] == 'expense':
+            conn.execute('''
+                UPDATE treasuries 
+                SET balance = balance - ? 
+                WHERE id = ?
+            ''', (data['amount'], data['treasury_id']))
+        
+        conn.commit()
+        
+        log_activity('تعديل معاملة', 'transactions', transaction_id, dict(old_transaction), data)
+        
+        conn.close()
+        return jsonify({'success': True, 'message': 'تم تحديث المعاملة بنجاح'})
+    except Exception as e:
+        conn.close()
+        return jsonify({'error': f'خطأ في تحديث المعاملة: {str(e)}'}), 500
+
+@app.route('/api/transactions/<int:transaction_id>', methods=['DELETE'])
+@login_required
+def api_delete_transaction(transaction_id):
+    conn = get_db_connection()
+    
+    try:
+        # الحصول على بيانات المعاملة
+        transaction = conn.execute('SELECT * FROM transactions WHERE id = ?', (transaction_id,)).fetchone()
+        
+        if not transaction:
+            conn.close()
+            return jsonify({'error': 'المعاملة غير موجودة'}), 404
+        
+        # إعادة الرصيد
+        if transaction['type'] == 'income':
+            conn.execute('''
+                UPDATE treasuries 
+                SET balance = balance - ? 
+                WHERE id = ?
+            ''', (transaction['amount'], transaction['treasury_id']))
+        elif transaction['type'] == 'expense':
+            conn.execute('''
+                UPDATE treasuries 
+                SET balance = balance + ? 
+                WHERE id = ?
+            ''', (transaction['amount'], transaction['treasury_id']))
+        
+        # حذف المعاملة
+        conn.execute('DELETE FROM transactions WHERE id = ?', (transaction_id,))
+        conn.commit()
+        
+        log_activity('حذف معاملة', 'transactions', transaction_id, dict(transaction), None)
+        
+        conn.close()
+        return jsonify({'success': True, 'message': 'تم حذف المعاملة بنجاح'})
+    except Exception as e:
+        conn.close()
+        return jsonify({'error': f'خطأ في حذف المعاملة: {str(e)}'}), 500
 
 # APIs للإحصائيات
 @app.route('/api/dashboard/stats')

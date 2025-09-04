@@ -782,6 +782,40 @@
             }
         }
 
+        // تعديل خزينة
+        async function editTreasury(treasuryId) {
+            // يمكن إضافة نافذة تعديل هنا
+            showSuccess('وظيفة التعديل قيد التطوير');
+        }
+
+        // حذف خزينة
+        async function deleteTreasury(treasuryId) {
+            if (!confirm('هل أنت متأكد من حذف هذه الخزينة؟')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/treasuries/${treasuryId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showSuccess('تم حذف الخزينة بنجاح');
+                    loadTreasuries();
+                } else {
+                    showError(result.error || 'خطأ في حذف الخزينة');
+                }
+            } catch (error) {
+                console.error('Error deleting treasury:', error);
+                showError('خطأ في الاتصال بالخادم');
+            }
+        }
+
         // إغلاق النافذة
         function closeModal(modalId) {
             document.getElementById(modalId).style.display = 'none';
