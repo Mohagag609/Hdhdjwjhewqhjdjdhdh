@@ -1,5 +1,5 @@
-# مرحلة البناء
-FROM node:18-alpine as build
+# استخدام Node.js 18
+FROM node:18-alpine
 
 # تعيين مجلد العمل
 WORKDIR /app
@@ -8,25 +8,21 @@ WORKDIR /app
 COPY package*.json ./
 
 # تثبيت التبعيات
-RUN npm ci
+RUN npm ci --only=production
 
 # نسخ الكود
 COPY . .
 
-# بناء التطبيق
-RUN npm run build
+# إنشاء مستخدم غير root
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nodejs -u 1001
 
-# مرحلة الإنتاج
-FROM nginx:alpine
-
-# نسخ الملفات المبنية
-COPY --from=build /app/dist /usr/share/nginx/html
-
-# نسخ إعدادات nginx
-COPY nginx.conf /etc/nginx/nginx.conf
+# تغيير ملكية الملفات
+RUN chown -R nodejs:nodejs /app
+USER nodejs
 
 # فتح المنفذ
-EXPOSE 80
+EXPOSE 10000
 
-# تشغيل nginx
-CMD ["nginx", "-g", "daemon off;"]
+# تشغيل التطبيق
+CMD ["npm", "start"]
