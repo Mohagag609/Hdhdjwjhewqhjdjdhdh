@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الشركاء والموردين - نظام الخزنة الاحترافي</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: #f8fafc;
+            direction: rtl;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-details {
+            text-align: right;
+        }
+
+        .user-name {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .user-role {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: white;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            padding-top: 100px;
+            z-index: 999;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(100%);
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 0 20px;
+        }
+
+        .nav-item {
+            margin-bottom: 5px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 20px;
+            color: #4a5568;
+            text-decoration: none;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transform: translateX(-5px);
+        }
+
+        .nav-link i {
+            font-size: 18px;
+            width: 20px;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-right: 280px;
+            padding: 30px;
+            min-height: calc(100vh - 100px);
+            transition: margin-right 0.3s ease;
+        }
+
+        .main-content.expanded {
+            margin-right: 0;
+        }
+
+        .page-title {
+            font-size: 36px;
+            color: #2d3748;
+            margin-bottom: 30px;
+            font-weight: 700;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 20px 12px 50px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-box i {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+        }
+
+        .add-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Partners Grid */
+        .partners-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .partner-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .partner-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .partner-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            transform: translate(30px, -30px);
+            opacity: 0.1;
+        }
+
+        .partner-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .partner-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .partner-type {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .partner-type.supplier {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .partner-type.customer {
+            background: #bee3f8;
+            color: #2a4365;
+        }
+
+        .partner-type.both {
+            background: #fef5e7;
+            color: #744210;
+        }
+
+        .partner-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .action-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .partner-info {
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            color: #4a5568;
+        }
+
+        .info-item i {
+            width: 20px;
+            color: #667eea;
+        }
+
+        .partner-stats {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 5px;
+        }
+
+        .stat-item.positive .stat-value {
+            color: #38a169;
+        }
+
+        .stat-item.negative .stat-value {
+            color: #e53e3e;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 25px 30px;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .close {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .close:hover {
+            opacity: 0.7;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            background-color: white;
+            cursor: pointer;
+        }
+
+        .modal-footer {
+            padding: 20px 30px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(100%);
+            }
+            
+            .main-content {
+                margin-right: 0;
+            }
+            
+            .partners-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-vault"></i>
+                نظام الخزنة الاحترافي
+            </div>
+            <div class="user-info">
+                <div class="user-details">
+                    <div class="user-name" id="userName">المستخدم</div>
+                    <div class="user-role" id="userRole">مدير</div>
+                </div>
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    تسجيل الخروج
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="/dashboard" class="nav-link">
+                    <i class="fas fa-tachometer-alt"></i>
+                    لوحة التحكم
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/treasuries" class="nav-link">
+                    <i class="fas fa-vault"></i>
+                    إدارة الخزائن
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/transactions" class="nav-link">
+                    <i class="fas fa-exchange-alt"></i>
+                    المعاملات
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/partners" class="nav-link active">
+                    <i class="fas fa-handshake"></i>
+                    الشركاء والموردين
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/reports" class="nav-link">
+                    <i class="fas fa-chart-line"></i>
+                    التقارير
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/settings" class="nav-link">
+                    <i class="fas fa-cog"></i>
+                    الإعدادات
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <h1 class="page-title">الشركاء والموردين</h1>
+        
+        <!-- Controls -->
+        <div class="controls">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="البحث في الشركاء...">
+            </div>
+            <button class="add-btn" onclick="showAddPartnerModal()">
+                <i class="fas fa-plus"></i>
+                إضافة شريك/مورد
+            </button>
+        </div>
+
+        <!-- Partners Grid -->
+        <div id="partnersGrid" class="partners-grid">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>جاري تحميل الشركاء...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Partner Modal -->
+    <div id="addPartnerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">إضافة شريك/مورد جديد</h2>
+                <span class="close" onclick="closeModal('addPartnerModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="addPartnerForm">
+                    <div class="form-group">
+                        <label class="form-label">اسم الشريك/المورد *</label>
+                        <input type="text" class="form-input" id="partnerName" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">نوع الشريك *</label>
+                        <select class="form-select" id="partnerType" required>
+                            <option value="">اختر نوع الشريك</option>
+                            <option value="supplier">مورد</option>
+                            <option value="customer">عميل</option>
+                            <option value="both">مورد وعميل</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">البريد الإلكتروني</label>
+                        <input type="email" class="form-input" id="partnerEmail">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">رقم الهاتف</label>
+                        <input type="tel" class="form-input" id="partnerPhone">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">العنوان</label>
+                        <textarea class="form-input form-textarea" id="partnerAddress" placeholder="عنوان الشريك/المورد..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">حد الائتمان</label>
+                        <input type="number" class="form-input" id="creditLimit" step="0.01" value="0">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addPartnerModal')">إلغاء</button>
+                <button type="button" class="btn btn-primary" onclick="addPartner()">إضافة الشريك</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // تحميل البيانات عند فتح الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPartners();
+            loadUserInfo();
+        });
+
+        // تحميل الشركاء
+        async function loadPartners() {
+            try {
+                const response = await fetch('/api/partners');
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayPartners(data.data);
+                } else {
+                    showError('خطأ في تحميل الشركاء');
+                }
+            } catch (error) {
+                console.error('Error loading partners:', error);
+                showError('خطأ في الاتصال بالخادم');
+            }
+        }
+
+        // عرض الشركاء
+        function displayPartners(partners) {
+            const grid = document.getElementById('partnersGrid');
+            
+            if (partners.length === 0) {
+                grid.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 60px; color: #718096;">
+                        <i class="fas fa-handshake" style="font-size: 64px; margin-bottom: 20px; opacity: 0.3;"></i>
+                        <h3>لا توجد شركاء</h3>
+                        <p>ابدأ بإضافة شريك/مورد جديد</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = partners.map(partner => `
+                <div class="partner-card">
+                    <div class="partner-header">
+                        <div>
+                            <div class="partner-name">${partner.name}</div>
+                            <span class="partner-type ${partner.type}">${getPartnerTypeText(partner.type)}</span>
+                        </div>
+                        <div class="partner-actions">
+                            <button class="action-btn" onclick="viewPartnerStatement(${partner.id})" title="كشف الحساب">
+                                <i class="fas fa-file-alt"></i>
+                            </button>
+                            <button class="action-btn" onclick="editPartner(${partner.id})" title="تعديل">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn" onclick="deletePartner(${partner.id})" title="حذف">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="partner-info">
+                        ${partner.email ? `
+                            <div class="info-item">
+                                <i class="fas fa-envelope"></i>
+                                <span>${partner.email}</span>
+                            </div>
+                        ` : ''}
+                        ${partner.phone ? `
+                            <div class="info-item">
+                                <i class="fas fa-phone"></i>
+                                <span>${partner.phone}</span>
+                            </div>
+                        ` : ''}
+                        ${partner.address ? `
+                            <div class="info-item">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>${partner.address}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="partner-stats">
+                        <div class="stat-item positive">
+                            <div class="stat-value">${formatCurrency(partner.total_income)}</div>
+                            <div class="stat-label">إجمالي الإيرادات</div>
+                        </div>
+                        <div class="stat-item negative">
+                            <div class="stat-value">${formatCurrency(partner.total_expense)}</div>
+                            <div class="stat-label">إجمالي المصروفات</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${formatCurrency(partner.credit_limit)}</div>
+                            <div class="stat-label">حد الائتمان</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // إظهار نافذة إضافة شريك
+        function showAddPartnerModal() {
+            document.getElementById('addPartnerModal').style.display = 'block';
+        }
+
+        // إضافة شريك
+        async function addPartner() {
+            const data = {
+                name: document.getElementById('partnerName').value,
+                type: document.getElementById('partnerType').value,
+                email: document.getElementById('partnerEmail').value,
+                phone: document.getElementById('partnerPhone').value,
+                address: document.getElementById('partnerAddress').value,
+                credit_limit: parseFloat(document.getElementById('creditLimit').value) || 0
+            };
+
+            if (!data.name || !data.type) {
+                showError('اسم الشريك ونوعه مطلوبان');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/partners', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showSuccess('تم إضافة الشريك بنجاح');
+                    closeModal('addPartnerModal');
+                    document.getElementById('addPartnerForm').reset();
+                    loadPartners();
+                } else {
+                    showError(result.error || 'خطأ في إضافة الشريك');
+                }
+            } catch (error) {
+                console.error('Error adding partner:', error);
+                showError('خطأ في الاتصال بالخادم');
+            }
+        }
+
+        // عرض كشف حساب الشريك
+        function viewPartnerStatement(partnerId) {
+            window.open(`/api/partners/${partnerId}/statement`, '_blank');
+        }
+
+        // تعديل شريك
+        function editPartner(partnerId) {
+            showSuccess('وظيفة التعديل قيد التطوير');
+        }
+
+        // حذف شريك
+        function deletePartner(partnerId) {
+            if (!confirm('هل أنت متأكد من حذف هذا الشريك؟')) {
+                return;
+            }
+            showSuccess('وظيفة الحذف قيد التطوير');
+        }
+
+        // إغلاق النافذة
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // تنسيق العملة
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('ar-SA', {
+                style: 'currency',
+                currency: 'SAR'
+            }).format(amount);
+        }
+
+        // الحصول على نص نوع الشريك
+        function getPartnerTypeText(type) {
+            const types = {
+                'supplier': 'مورد',
+                'customer': 'عميل',
+                'both': 'مورد وعميل'
+            };
+            return types[type] || type;
+        }
+
+        // تحميل معلومات المستخدم
+        async function loadUserInfo() {
+            // يمكن إضافة تحميل معلومات المستخدم هنا
+        }
+
+        // تسجيل الخروج
+        async function logout() {
+            try {
+                await fetch('/api/logout', { method: 'POST' });
+                window.location.href = '/login';
+            } catch (error) {
+                console.error('Error logging out:', error);
+                window.location.href = '/login';
+            }
+        }
+
+        // إظهار رسالة نجاح
+        function showSuccess(message) {
+            // يمكن إضافة نظام إشعارات هنا
+            alert(message);
+        }
+
+        // إظهار رسالة خطأ
+        function showError(message) {
+            // يمكن إضافة نظام إشعارات هنا
+            alert(message);
+        }
+
+        // البحث
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const cards = document.querySelectorAll('.partner-card');
+            
+            cards.forEach(card => {
+                const name = card.querySelector('.partner-name').textContent.toLowerCase();
+                const email = card.querySelector('.info-item span')?.textContent.toLowerCase() || '';
+                
+                if (name.includes(searchTerm) || email.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        // إغلاق النافذة عند النقر خارجها
+        window.onclick = function(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

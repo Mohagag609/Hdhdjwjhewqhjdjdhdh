@@ -1,5 +1,5 @@
--- نظام الخزنة الاحترافي المتكامل
--- Professional Treasury Management System
+-- نظام الخزنة الاحترافي المبسط
+-- Simplified Professional Treasury Management System
 
 -- جدول المستخدمين والأدوار
 CREATE TABLE IF NOT EXISTS users (
@@ -30,46 +30,34 @@ CREATE TABLE IF NOT EXISTS treasuries (
     FOREIGN KEY (parent_id) REFERENCES treasuries(id)
 );
 
--- جدول العملاء
-CREATE TABLE IF NOT EXISTS customers (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name VARCHAR(100) NOT NULL,
-    email VARCHAR(100),
-    phone VARCHAR(20),
-    address TEXT,
-    credit_limit DECIMAL(15,2) DEFAULT 0.00,
-    current_balance DECIMAL(15,2) DEFAULT 0.00,
-    is_active BOOLEAN DEFAULT 1,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
--- جدول الموردين
-CREATE TABLE IF NOT EXISTS suppliers (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name VARCHAR(100) NOT NULL,
-    email VARCHAR(100),
-    phone VARCHAR(20),
-    address TEXT,
-    credit_limit DECIMAL(15,2) DEFAULT 0.00,
-    current_balance DECIMAL(15,2) DEFAULT 0.00,
-    is_active BOOLEAN DEFAULT 1,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
--- جدول المنتجات
-CREATE TABLE IF NOT EXISTS products (
+-- جدول أنواع الإيرادات
+CREATE TABLE IF NOT EXISTS income_types (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name VARCHAR(100) NOT NULL,
     description TEXT,
-    sku VARCHAR(50) UNIQUE,
-    category VARCHAR(50),
-    unit_price DECIMAL(10,2) DEFAULT 0.00,
-    cost_price DECIMAL(10,2) DEFAULT 0.00,
-    stock_quantity INTEGER DEFAULT 0,
-    min_stock_level INTEGER DEFAULT 0,
-    unit VARCHAR(20) DEFAULT 'piece',
+    is_active BOOLEAN DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- جدول أنواع المصروفات
+CREATE TABLE IF NOT EXISTS expense_types (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    is_active BOOLEAN DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- جدول الشركاء
+CREATE TABLE IF NOT EXISTS partners (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(100) NOT NULL,
+    type VARCHAR(20) CHECK (type IN ('supplier', 'customer', 'both')) DEFAULT 'both',
+    email VARCHAR(100),
+    phone VARCHAR(20),
+    address TEXT,
+    credit_limit DECIMAL(15,2) DEFAULT 0.00,
+    current_balance DECIMAL(15,2) DEFAULT 0.00,
     is_active BOOLEAN DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -83,65 +71,18 @@ CREATE TABLE IF NOT EXISTS transactions (
     description TEXT NOT NULL,
     reference VARCHAR(50),
     treasury_id INTEGER NOT NULL,
+    partner_id INTEGER,
+    income_type_id INTEGER,
+    expense_type_id INTEGER,
+    transfer_to_treasury_id INTEGER,
     user_id INTEGER NOT NULL,
-    customer_id INTEGER,
-    supplier_id INTEGER,
     transaction_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (treasury_id) REFERENCES treasuries(id),
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (customer_id) REFERENCES customers(id),
-    FOREIGN KEY (supplier_id) REFERENCES suppliers(id)
-);
-
--- جدول الفواتير
-CREATE TABLE IF NOT EXISTS invoices (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    invoice_number VARCHAR(50) UNIQUE NOT NULL,
-    type VARCHAR(20) CHECK (type IN ('sale', 'purchase')),
-    customer_id INTEGER,
-    supplier_id INTEGER,
-    total_amount DECIMAL(15,2) NOT NULL,
-    paid_amount DECIMAL(15,2) DEFAULT 0.00,
-    remaining_amount DECIMAL(15,2) NOT NULL,
-    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'partial', 'cancelled')),
-    due_date DATE,
-    invoice_date DATE DEFAULT CURRENT_DATE,
-    created_by INTEGER NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (customer_id) REFERENCES customers(id),
-    FOREIGN KEY (supplier_id) REFERENCES suppliers(id),
-    FOREIGN KEY (created_by) REFERENCES users(id)
-);
-
--- جدول عناصر الفواتير
-CREATE TABLE IF NOT EXISTS invoice_items (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    invoice_id INTEGER NOT NULL,
-    product_id INTEGER NOT NULL,
-    quantity INTEGER NOT NULL,
-    unit_price DECIMAL(10,2) NOT NULL,
-    total_price DECIMAL(10,2) NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (invoice_id) REFERENCES invoices(id),
-    FOREIGN KEY (product_id) REFERENCES products(id)
-);
-
--- جدول حركات المخزون
-CREATE TABLE IF NOT EXISTS inventory_transactions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    product_id INTEGER NOT NULL,
-    type VARCHAR(20) CHECK (type IN ('in', 'out', 'adjustment')),
-    quantity INTEGER NOT NULL,
-    unit_price DECIMAL(10,2),
-    total_value DECIMAL(10,2),
-    reference VARCHAR(50),
-    description TEXT,
-    user_id INTEGER NOT NULL,
-    transaction_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (product_id) REFERENCES products(id),
+    FOREIGN KEY (partner_id) REFERENCES partners(id),
+    FOREIGN KEY (income_type_id) REFERENCES income_types(id),
+    FOREIGN KEY (expense_type_id) REFERENCES expense_types(id),
+    FOREIGN KEY (transfer_to_treasury_id) REFERENCES treasuries(id),
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
@@ -156,15 +97,11 @@ CREATE TABLE IF NOT EXISTS checks (
     issue_date DATE,
     due_date DATE,
     status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'cleared', 'bounced', 'cancelled')),
-    customer_id INTEGER,
-    supplier_id INTEGER,
     treasury_id INTEGER,
     description TEXT,
     created_by INTEGER NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (customer_id) REFERENCES customers(id),
-    FOREIGN KEY (supplier_id) REFERENCES suppliers(id),
     FOREIGN KEY (treasury_id) REFERENCES treasuries(id),
     FOREIGN KEY (created_by) REFERENCES users(id)
 );
@@ -221,24 +158,27 @@ INSERT INTO system_settings (setting_key, setting_value, description) VALUES
 ('company_phone', '+966 11 123 4567', 'هاتف الشركة'),
 ('company_email', 'info@treasury.com', 'بريد الشركة الإلكتروني'),
 ('default_currency', 'SAR', 'العملة الافتراضية'),
-('invoice_prefix', 'INV', 'بادئة أرقام الفواتير'),
 ('check_prefix', 'CHK', 'بادئة أرقام الشيكات');
 
--- إدراج عينات من العملاء
-INSERT INTO customers (name, email, phone, address, credit_limit) VALUES 
-('أحمد محمد', 'ahmed@email.com', '0501234567', 'الرياض، حي النخيل', 50000.00),
-('فاطمة علي', 'fatima@email.com', '0507654321', 'جدة، حي الزهراء', 30000.00),
-('محمد السعد', 'mohammed@email.com', '0509876543', 'الدمام، حي الفردوس', 25000.00);
+-- إدراج أنواع الإيرادات الافتراضية
+INSERT INTO income_types (name, description) VALUES 
+('مبيعات', 'إيرادات من المبيعات'),
+('خدمات', 'إيرادات من تقديم الخدمات'),
+('استثمارات', 'إيرادات من الاستثمارات'),
+('إيرادات أخرى', 'إيرادات متنوعة');
 
--- إدراج عينات من الموردين
-INSERT INTO suppliers (name, email, phone, address, credit_limit) VALUES 
-('مؤسسة التوريدات العامة', 'supplies@company.com', '0112345678', 'الرياض، حي العليا', 100000.00),
-('شركة الخدمات المتكاملة', 'services@company.com', '0118765432', 'جدة، حي الروضة', 75000.00),
-('مؤسسة المواد الخام', 'materials@company.com', '0134567890', 'الدمام، حي الشاطئ', 60000.00);
+-- إدراج أنواع المصروفات الافتراضية
+INSERT INTO expense_types (name, description) VALUES 
+('مشتريات', 'مصروفات المشتريات'),
+('رواتب', 'مصروفات الرواتب والأجور'),
+('إيجار', 'مصروفات الإيجار'),
+('كهرباء وماء', 'مصروفات المرافق'),
+('صيانة', 'مصروفات الصيانة'),
+('مصروفات أخرى', 'مصروفات متنوعة');
 
--- إدراج عينات من المنتجات
-INSERT INTO products (name, description, sku, category, unit_price, cost_price, stock_quantity, min_stock_level, unit) VALUES 
-('جهاز كمبيوتر محمول', 'لابتوب عالي الأداء', 'LAP001', 'إلكترونيات', 3500.00, 2800.00, 10, 2, 'piece'),
-('طابعة ليزر', 'طابعة مكتبية عالية الجودة', 'PRT001', 'معدات مكتبية', 800.00, 600.00, 5, 1, 'piece'),
-('كراسي مكتب', 'كراسي مريحة للمكتب', 'CHR001', 'أثاث', 150.00, 100.00, 50, 10, 'piece'),
-('أوراق A4', 'أوراق طباعة عالية الجودة', 'PAP001', 'مستلزمات مكتبية', 25.00, 18.00, 100, 20, 'ream');
+-- إدراج عينات من الشركاء
+INSERT INTO partners (name, type, email, phone, address, credit_limit) VALUES 
+('شركة التوريدات العامة', 'supplier', 'supplies@company.com', '0112345678', 'الرياض، حي العليا', 100000.00),
+('مؤسسة الخدمات المتكاملة', 'supplier', 'services@company.com', '0118765432', 'جدة، حي الروضة', 75000.00),
+('عميل أحمد محمد', 'customer', 'ahmed@email.com', '0501234567', 'الرياض، حي النخيل', 50000.00),
+('عميل فاطمة علي', 'customer', 'fatima@email.com', '0507654321', 'جدة، حي الزهراء', 30000.00);

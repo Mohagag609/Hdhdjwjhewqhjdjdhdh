@@ -20,7 +20,7 @@ app.secret_key = 'treasury_professional_secret_key_2024'
 CORS(app)
 
 # إعدادات قاعدة البيانات
-DATABASE = 'database/treasury.db'
+DATABASE = 'treasury.db'
 
 def get_db_connection():
     """إنشاء اتصال بقاعدة البيانات"""
@@ -30,8 +30,6 @@ def get_db_connection():
 
 def init_database():
     """تهيئة قاعدة البيانات"""
-    os.makedirs('database', exist_ok=True)
-    
     conn = get_db_connection()
     
     try:
@@ -116,35 +114,15 @@ def dashboard():
 def treasuries():
     return render_template('treasuries.html')
 
-@app.route('/customers')
-@login_required
-def customers():
-    return render_template('customers.html')
-
-@app.route('/suppliers')
-@login_required
-def suppliers():
-    return render_template('suppliers.html')
-
-@app.route('/products')
-@login_required
-def products():
-    return render_template('products.html')
-
-@app.route('/invoices')
-@login_required
-def invoices():
-    return render_template('invoices.html')
-
 @app.route('/transactions')
 @login_required
 def transactions():
     return render_template('transactions.html')
 
-@app.route('/inventory')
+@app.route('/partners')
 @login_required
-def inventory():
-    return render_template('inventory.html')
+def partners():
+    return render_template('partners.html')
 
 @app.route('/reports')
 @login_required
@@ -216,7 +194,8 @@ def api_get_treasuries():
     treasuries = conn.execute('''
         SELECT t.*, 
                COALESCE(parent.name, '') as parent_name,
-               (SELECT COUNT(*) FROM treasuries child WHERE child.parent_id = t.id) as children_count
+               (SELECT COUNT(*) FROM treasuries child WHERE child.parent_id = t.id AND child.is_active = 1) as children_count,
+               (SELECT COALESCE(SUM(child.balance), 0) FROM treasuries child WHERE child.parent_id = t.id AND child.is_active = 1) as children_total_balance
         FROM treasuries t
         LEFT JOIN treasuries parent ON t.parent_id = parent.id
         WHERE t.is_active = 1
@@ -262,123 +241,79 @@ def api_add_treasury():
         conn.close()
         return jsonify({'error': f'خطأ في إضافة الخزينة: {str(e)}'}), 500
 
-# APIs للعملاء
-@app.route('/api/customers')
+@app.route('/api/treasuries/<int:treasury_id>', methods=['PUT'])
 @login_required
-def api_get_customers():
-    conn = get_db_connection()
-    customers = conn.execute('''
-        SELECT c.*, 
-               (SELECT COUNT(*) FROM invoices WHERE customer_id = c.id) as invoices_count,
-               (SELECT COALESCE(SUM(remaining_amount), 0) FROM invoices WHERE customer_id = c.id AND status != 'paid') as total_debt
-        FROM customers c
-        WHERE c.is_active = 1
-        ORDER BY c.name
-    ''').fetchall()
-    conn.close()
-    
-    return jsonify({
-        'success': True,
-        'data': [dict(customer) for customer in customers]
-    })
-
-@app.route('/api/customers', methods=['POST'])
-@login_required
-def api_add_customer():
+@admin_required
+def api_update_treasury(treasury_id):
     data = request.get_json()
     
     if not data.get('name'):
-        return jsonify({'error': 'اسم العميل مطلوب'}), 400
+        return jsonify({'error': 'اسم الخزينة مطلوب'}), 400
     
     conn = get_db_connection()
     try:
+        # الحصول على البيانات القديمة للتسجيل
+        old_treasury = conn.execute('SELECT * FROM treasuries WHERE id = ?', (treasury_id,)).fetchone()
+        
         conn.execute('''
-            INSERT INTO customers (name, email, phone, address, credit_limit)
-            VALUES (?, ?, ?, ?, ?)
+            UPDATE treasuries 
+            SET name = ?, parent_id = ?, currency = ?, description = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
         ''', (
             data['name'],
-            data.get('email', ''),
-            data.get('phone', ''),
-            data.get('address', ''),
-            data.get('credit_limit', 0)
+            data.get('parent_id'),
+            data.get('currency', 'SAR'),
+            data.get('description', ''),
+            treasury_id
         ))
         
-        customer_id = conn.lastrowid
         conn.commit()
         
-        log_activity('إضافة عميل', 'customers', customer_id, None, data)
+        log_activity('تعديل خزينة', 'treasuries', treasury_id, dict(old_treasury) if old_treasury else None, data)
         
         conn.close()
-        return jsonify({'success': True, 'message': 'تم إضافة العميل بنجاح'})
+        return jsonify({'success': True, 'message': 'تم تحديث الخزينة بنجاح'})
     except Exception as e:
         conn.close()
-        return jsonify({'error': f'خطأ في إضافة العميل: {str(e)}'}), 500
+        return jsonify({'error': f'خطأ في تحديث الخزينة: {str(e)}'}), 500
 
-# APIs للموردين
-@app.route('/api/suppliers')
+@app.route('/api/treasuries/<int:treasury_id>', methods=['DELETE'])
 @login_required
-def api_get_suppliers():
-    conn = get_db_connection()
-    suppliers = conn.execute('''
-        SELECT s.*, 
-               (SELECT COUNT(*) FROM invoices WHERE supplier_id = s.id) as invoices_count,
-               (SELECT COALESCE(SUM(remaining_amount), 0) FROM invoices WHERE supplier_id = s.id AND status != 'paid') as total_debt
-        FROM suppliers s
-        WHERE s.is_active = 1
-        ORDER BY s.name
-    ''').fetchall()
-    conn.close()
-    
-    return jsonify({
-        'success': True,
-        'data': [dict(supplier) for supplier in suppliers]
-    })
-
-@app.route('/api/suppliers', methods=['POST'])
-@login_required
-def api_add_supplier():
-    data = request.get_json()
-    
-    if not data.get('name'):
-        return jsonify({'error': 'اسم المورد مطلوب'}), 400
-    
+@admin_required
+def api_delete_treasury(treasury_id):
     conn = get_db_connection()
     try:
-        conn.execute('''
-            INSERT INTO suppliers (name, email, phone, address, credit_limit)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (
-            data['name'],
-            data.get('email', ''),
-            data.get('phone', ''),
-            data.get('address', ''),
-            data.get('credit_limit', 0)
-        ))
+        # التحقق من وجود معاملات مرتبطة بالخزينة
+        transactions_count = conn.execute('SELECT COUNT(*) as count FROM transactions WHERE treasury_id = ?', (treasury_id,)).fetchone()['count']
         
-        supplier_id = conn.lastrowid
+        if transactions_count > 0:
+            conn.close()
+            return jsonify({'error': 'لا يمكن حذف الخزينة لوجود معاملات مرتبطة بها'}), 400
+        
+        # الحصول على البيانات للتسجيل
+        old_treasury = conn.execute('SELECT * FROM treasuries WHERE id = ?', (treasury_id,)).fetchone()
+        
+        conn.execute('UPDATE treasuries SET is_active = 0 WHERE id = ?', (treasury_id,))
         conn.commit()
         
-        log_activity('إضافة مورد', 'suppliers', supplier_id, None, data)
+        log_activity('حذف خزينة', 'treasuries', treasury_id, dict(old_treasury) if old_treasury else None, None)
         
         conn.close()
-        return jsonify({'success': True, 'message': 'تم إضافة المورد بنجاح'})
+        return jsonify({'success': True, 'message': 'تم حذف الخزينة بنجاح'})
     except Exception as e:
         conn.close()
-        return jsonify({'error': f'خطأ في إضافة المورد: {str(e)}'}), 500
+        return jsonify({'error': f'خطأ في حذف الخزينة: {str(e)}'}), 500
 
-# APIs للمنتجات
-@app.route('/api/products')
+# APIs للشركاء
+@app.route('/api/partners')
 @login_required
-def api_get_products():
+def api_get_partners():
     conn = get_db_connection()
-    products = conn.execute('''
+    partners = conn.execute('''
         SELECT p.*, 
-               CASE 
-                   WHEN p.stock_quantity <= p.min_stock_level THEN 'low_stock'
-                   WHEN p.stock_quantity = 0 THEN 'out_of_stock'
-                   ELSE 'in_stock'
-               END as stock_status
-        FROM products p
+               (SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE partner_id = p.id AND type = 'income') as total_income,
+               (SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE partner_id = p.id AND type = 'expense') as total_expense
+        FROM partners p
         WHERE p.is_active = 1
         ORDER BY p.name
     ''').fetchall()
@@ -386,44 +321,67 @@ def api_get_products():
     
     return jsonify({
         'success': True,
-        'data': [dict(product) for product in products]
+        'data': [dict(partner) for partner in partners]
     })
 
-@app.route('/api/products', methods=['POST'])
+@app.route('/api/partners', methods=['POST'])
 @login_required
-def api_add_product():
+def api_add_partner():
     data = request.get_json()
     
     if not data.get('name'):
-        return jsonify({'error': 'اسم المنتج مطلوب'}), 400
+        return jsonify({'error': 'اسم الشريك مطلوب'}), 400
     
     conn = get_db_connection()
     try:
         conn.execute('''
-            INSERT INTO products (name, description, sku, category, unit_price, cost_price, stock_quantity, min_stock_level, unit)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO partners (name, type, email, phone, address, credit_limit)
+            VALUES (?, ?, ?, ?, ?, ?)
         ''', (
             data['name'],
-            data.get('description', ''),
-            data.get('sku', ''),
-            data.get('category', ''),
-            data.get('unit_price', 0),
-            data.get('cost_price', 0),
-            data.get('stock_quantity', 0),
-            data.get('min_stock_level', 0),
-            data.get('unit', 'piece')
+            data.get('type', 'both'),
+            data.get('email', ''),
+            data.get('phone', ''),
+            data.get('address', ''),
+            data.get('credit_limit', 0)
         ))
         
-        product_id = conn.lastrowid
+        partner_id = conn.lastrowid
         conn.commit()
         
-        log_activity('إضافة منتج', 'products', product_id, None, data)
+        log_activity('إضافة شريك', 'partners', partner_id, None, data)
         
         conn.close()
-        return jsonify({'success': True, 'message': 'تم إضافة المنتج بنجاح'})
+        return jsonify({'success': True, 'message': 'تم إضافة الشريك بنجاح'})
     except Exception as e:
         conn.close()
-        return jsonify({'error': f'خطأ في إضافة المنتج: {str(e)}'}), 500
+        return jsonify({'error': f'خطأ في إضافة الشريك: {str(e)}'}), 500
+
+# APIs لأنواع الإيرادات
+@app.route('/api/income-types')
+@login_required
+def api_get_income_types():
+    conn = get_db_connection()
+    types = conn.execute('SELECT * FROM income_types WHERE is_active = 1 ORDER BY name').fetchall()
+    conn.close()
+    
+    return jsonify({
+        'success': True,
+        'data': [dict(type) for type in types]
+    })
+
+# APIs لأنواع المصروفات
+@app.route('/api/expense-types')
+@login_required
+def api_get_expense_types():
+    conn = get_db_connection()
+    types = conn.execute('SELECT * FROM expense_types WHERE is_active = 1 ORDER BY name').fetchall()
+    conn.close()
+    
+    return jsonify({
+        'success': True,
+        'data': [dict(type) for type in types]
+    })
 
 # APIs للمعاملات
 @app.route('/api/transactions')
@@ -436,13 +394,17 @@ def api_get_transactions():
         SELECT t.*, 
                tr.name as treasury_name,
                u.full_name as user_name,
-               c.name as customer_name,
-               s.name as supplier_name
+               p.name as partner_name,
+               it.name as income_type_name,
+               et.name as expense_type_name,
+               tr2.name as transfer_to_treasury_name
         FROM transactions t
         LEFT JOIN treasuries tr ON t.treasury_id = tr.id
         LEFT JOIN users u ON t.user_id = u.id
-        LEFT JOIN customers c ON t.customer_id = c.id
-        LEFT JOIN suppliers s ON t.supplier_id = s.id
+        LEFT JOIN partners p ON t.partner_id = p.id
+        LEFT JOIN income_types it ON t.income_type_id = it.id
+        LEFT JOIN expense_types et ON t.expense_type_id = et.id
+        LEFT JOIN treasuries tr2 ON t.transfer_to_treasury_id = tr2.id
         ORDER BY t.transaction_date DESC
         LIMIT 100
     ''').fetchall()
@@ -464,22 +426,28 @@ def api_add_transaction():
         if not data.get(field):
             return jsonify({'error': f'الحقل {field} مطلوب'}), 400
     
+    # التحقق من التحويلات
+    if data['type'] == 'transfer' and not data.get('transfer_to_treasury_id'):
+        return jsonify({'error': 'الخزينة المستقبلة مطلوبة للتحويل'}), 400
+    
     conn = get_db_connection()
     
     try:
         # إضافة المعاملة
         conn.execute('''
-            INSERT INTO transactions (type, amount, description, reference, treasury_id, user_id, customer_id, supplier_id, transaction_date)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO transactions (type, amount, description, reference, treasury_id, partner_id, income_type_id, expense_type_id, transfer_to_treasury_id, user_id, transaction_date)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             data['type'],
             data['amount'],
             data['description'],
             data.get('reference', ''),
             data['treasury_id'],
+            data.get('partner_id'),
+            data.get('income_type_id'),
+            data.get('expense_type_id'),
+            data.get('transfer_to_treasury_id'),
             session['user_id'],
-            data.get('customer_id'),
-            data.get('supplier_id'),
             data.get('transaction_date', datetime.now())
         ))
         
@@ -498,6 +466,19 @@ def api_add_transaction():
                 SET balance = balance - ? 
                 WHERE id = ?
             ''', (data['amount'], data['treasury_id']))
+        elif data['type'] == 'transfer':
+            # خصم من الخزينة المصدرة
+            conn.execute('''
+                UPDATE treasuries 
+                SET balance = balance - ? 
+                WHERE id = ?
+            ''', (data['amount'], data['treasury_id']))
+            # إضافة للخزينة المستقبلة
+            conn.execute('''
+                UPDATE treasuries 
+                SET balance = balance + ? 
+                WHERE id = ?
+            ''', (data['amount'], data['transfer_to_treasury_id']))
         
         conn.commit()
         
@@ -508,6 +489,203 @@ def api_add_transaction():
     except Exception as e:
         conn.close()
         return jsonify({'error': f'خطأ في إضافة المعاملة: {str(e)}'}), 500
+
+@app.route('/api/transactions/<int:transaction_id>', methods=['PUT'])
+@login_required
+def api_update_transaction(transaction_id):
+    data = request.get_json()
+    
+    required_fields = ['type', 'amount', 'description', 'treasury_id']
+    for field in required_fields:
+        if not data.get(field):
+            return jsonify({'error': f'الحقل {field} مطلوب'}), 400
+    
+    conn = get_db_connection()
+    
+    try:
+        # الحصول على البيانات القديمة
+        old_transaction = conn.execute('SELECT * FROM transactions WHERE id = ?', (transaction_id,)).fetchone()
+        
+        if not old_transaction:
+            conn.close()
+            return jsonify({'error': 'المعاملة غير موجودة'}), 404
+        
+        # إعادة الرصيد القديم
+        if old_transaction['type'] == 'income':
+            conn.execute('''
+                UPDATE treasuries 
+                SET balance = balance - ? 
+                WHERE id = ?
+            ''', (old_transaction['amount'], old_transaction['treasury_id']))
+        elif old_transaction['type'] == 'expense':
+            conn.execute('''
+                UPDATE treasuries 
+                SET balance = balance + ? 
+                WHERE id = ?
+            ''', (old_transaction['amount'], old_transaction['treasury_id']))
+        
+        # تحديث المعاملة
+        conn.execute('''
+            UPDATE transactions 
+            SET type = ?, amount = ?, description = ?, reference = ?, treasury_id = ?, partner_id = ?, income_type_id = ?, expense_type_id = ?, transfer_to_treasury_id = ?, transaction_date = ?
+            WHERE id = ?
+        ''', (
+            data['type'],
+            data['amount'],
+            data['description'],
+            data.get('reference', ''),
+            data['treasury_id'],
+            data.get('partner_id'),
+            data.get('income_type_id'),
+            data.get('expense_type_id'),
+            data.get('transfer_to_treasury_id'),
+            data.get('transaction_date', datetime.now()),
+            transaction_id
+        ))
+        
+        # تطبيق الرصيد الجديد
+        if data['type'] == 'income':
+            conn.execute('''
+                UPDATE treasuries 
+                SET balance = balance + ? 
+                WHERE id = ?
+            ''', (data['amount'], data['treasury_id']))
+        elif data['type'] == 'expense':
+            conn.execute('''
+                UPDATE treasuries 
+                SET balance = balance - ? 
+                WHERE id = ?
+            ''', (data['amount'], data['treasury_id']))
+        
+        conn.commit()
+        
+        log_activity('تعديل معاملة', 'transactions', transaction_id, dict(old_transaction), data)
+        
+        conn.close()
+        return jsonify({'success': True, 'message': 'تم تحديث المعاملة بنجاح'})
+    except Exception as e:
+        conn.close()
+        return jsonify({'error': f'خطأ في تحديث المعاملة: {str(e)}'}), 500
+
+@app.route('/api/transactions/<int:transaction_id>', methods=['DELETE'])
+@login_required
+def api_delete_transaction(transaction_id):
+    conn = get_db_connection()
+    
+    try:
+        # الحصول على بيانات المعاملة
+        transaction = conn.execute('SELECT * FROM transactions WHERE id = ?', (transaction_id,)).fetchone()
+        
+        if not transaction:
+            conn.close()
+            return jsonify({'error': 'المعاملة غير موجودة'}), 404
+        
+        # إعادة الرصيد
+        if transaction['type'] == 'income':
+            conn.execute('''
+                UPDATE treasuries 
+                SET balance = balance - ? 
+                WHERE id = ?
+            ''', (transaction['amount'], transaction['treasury_id']))
+        elif transaction['type'] == 'expense':
+            conn.execute('''
+                UPDATE treasuries 
+                SET balance = balance + ? 
+                WHERE id = ?
+            ''', (transaction['amount'], transaction['treasury_id']))
+        
+        # حذف المعاملة
+        conn.execute('DELETE FROM transactions WHERE id = ?', (transaction_id,))
+        conn.commit()
+        
+        log_activity('حذف معاملة', 'transactions', transaction_id, dict(transaction), None)
+        
+        conn.close()
+        return jsonify({'success': True, 'message': 'تم حذف المعاملة بنجاح'})
+    except Exception as e:
+        conn.close()
+        return jsonify({'error': f'خطأ في حذف المعاملة: {str(e)}'}), 500
+
+# APIs لكشوف الحسابات
+@app.route('/api/partners/<int:partner_id>/statement')
+@login_required
+def api_partner_statement(partner_id):
+    conn = get_db_connection()
+    
+    # بيانات الشريك
+    partner = conn.execute('SELECT * FROM partners WHERE id = ? AND is_active = 1', (partner_id,)).fetchone()
+    if not partner:
+        conn.close()
+        return jsonify({'error': 'الشريك غير موجود'}), 404
+    
+    # معاملات الشريك
+    transactions = conn.execute('''
+        SELECT t.*, 
+               tr.name as treasury_name,
+               it.name as income_type_name,
+               et.name as expense_type_name
+        FROM transactions t
+        LEFT JOIN treasuries tr ON t.treasury_id = tr.id
+        LEFT JOIN income_types it ON t.income_type_id = it.id
+        LEFT JOIN expense_types et ON t.expense_type_id = et.id
+        WHERE t.partner_id = ?
+        ORDER BY t.transaction_date DESC
+    ''', (partner_id,)).fetchall()
+    
+    # إجماليات
+    totals = conn.execute('''
+        SELECT 
+            COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END), 0) as total_income,
+            COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) as total_expense
+        FROM transactions 
+        WHERE partner_id = ?
+    ''', (partner_id,)).fetchone()
+    
+    conn.close()
+    
+    return jsonify({
+        'success': True,
+        'data': {
+            'partner': dict(partner),
+            'transactions': [dict(transaction) for transaction in transactions],
+            'totals': dict(totals)
+        }
+    })
+
+@app.route('/api/treasuries/<int:treasury_id>/hierarchical-statement')
+@login_required
+def api_treasury_hierarchical_statement(treasury_id):
+    conn = get_db_connection()
+    
+    # بيانات الخزينة
+    treasury = conn.execute('SELECT * FROM treasuries WHERE id = ? AND is_active = 1', (treasury_id,)).fetchone()
+    if not treasury:
+        conn.close()
+        return jsonify({'error': 'الخزينة غير موجودة'}), 404
+    
+    # الخزائن الفرعية
+    children = conn.execute('''
+        SELECT t.*, 
+               (SELECT COALESCE(SUM(child.balance), 0) FROM treasuries child WHERE child.parent_id = t.id AND child.is_active = 1) as children_total_balance
+        FROM treasuries t
+        WHERE t.parent_id = ? AND t.is_active = 1
+        ORDER BY t.name
+    ''', (treasury_id,)).fetchall()
+    
+    # إجمالي الخزائن الفرعية
+    children_total = sum(child['balance'] + child['children_total_balance'] for child in children)
+    
+    conn.close()
+    
+    return jsonify({
+        'success': True,
+        'data': {
+            'treasury': dict(treasury),
+            'children': [dict(child) for child in children],
+            'children_total': children_total,
+            'total_with_children': treasury['balance'] + children_total
+        }
+    })
 
 # APIs للإحصائيات
 @app.route('/api/dashboard/stats')
@@ -533,28 +711,16 @@ def api_dashboard_stats():
         WHERE type = 'expense' AND transaction_date >= ?
     ''', (thirty_days_ago,)).fetchone()['total']
     
-    # عدد العملاء
-    customers_count = conn.execute('SELECT COUNT(*) as count FROM customers WHERE is_active = 1').fetchone()['count']
+    # عدد الخزائن
+    treasuries_count = conn.execute('SELECT COUNT(*) as count FROM treasuries WHERE is_active = 1').fetchone()['count']
     
-    # عدد الموردين
-    suppliers_count = conn.execute('SELECT COUNT(*) as count FROM suppliers WHERE is_active = 1').fetchone()['count']
-    
-    # عدد المنتجات
-    products_count = conn.execute('SELECT COUNT(*) as count FROM products WHERE is_active = 1').fetchone()['count']
-    
-    # المنتجات منخفضة المخزون
-    low_stock_products = conn.execute('''
+    # عدد المعاملات اليوم
+    today = date.today()
+    today_transactions = conn.execute('''
         SELECT COUNT(*) as count 
-        FROM products 
-        WHERE is_active = 1 AND stock_quantity <= min_stock_level
-    ''').fetchone()['count']
-    
-    # الفواتير المعلقة
-    pending_invoices = conn.execute('''
-        SELECT COUNT(*) as count 
-        FROM invoices 
-        WHERE status IN ('pending', 'partial')
-    ''').fetchone()['count']
+        FROM transactions 
+        WHERE DATE(transaction_date) = ?
+    ''', (today,)).fetchone()['count']
     
     conn.close()
     
@@ -565,11 +731,8 @@ def api_dashboard_stats():
             'total_income': total_income,
             'total_expenses': total_expenses,
             'net_profit': total_income - total_expenses,
-            'customers_count': customers_count,
-            'suppliers_count': suppliers_count,
-            'products_count': products_count,
-            'low_stock_products': low_stock_products,
-            'pending_invoices': pending_invoices
+            'treasuries_count': treasuries_count,
+            'today_transactions': today_transactions
         }
     })
 
