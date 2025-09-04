@@ -1,8 +1,8 @@
-const express = require('express');
-const bcrypt = require('bcryptjs');
-const { body, validationResult } = require('express-validator');
-const pool = require('../config/database');
-const { authenticateToken, requireAdmin } = require('../middleware/auth');
+import express from 'express';
+import bcrypt from 'bcryptjs';
+import { body, validationResult } from 'express-validator';
+import pool from '../config/database.js';
+import { authenticateToken, requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -393,4 +393,4 @@ router.get('/stats/summary', [authenticateToken, requireAdmin], async (req, res)
   }
 });
 
-module.exports = router;
+export default router;

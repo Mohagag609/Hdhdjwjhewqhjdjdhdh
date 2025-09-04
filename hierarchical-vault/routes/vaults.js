@@ -1,7 +1,7 @@
-const express = require('express');
-const { body, validationResult } = require('express-validator');
-const pool = require('../config/database');
-const { authenticateToken, requireAdmin } = require('../middleware/auth');
+import express from 'express';
+import { body, validationResult } from 'express-validator';
+import pool from '../config/database.js';
+import { authenticateToken, requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -330,4 +330,4 @@ router.get('/hierarchy/tree', authenticateToken, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

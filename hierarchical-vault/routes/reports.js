@@ -1,7 +1,7 @@
-const express = require('express');
-const { body, validationResult } = require('express-validator');
-const pool = require('../config/database');
-const { authenticateToken, requireUserOrAdmin } = require('../middleware/auth');
+import express from 'express';
+import { body, validationResult } from 'express-validator';
+import pool from '../config/database.js';
+import { authenticateToken, requireUserOrAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -573,4 +573,4 @@ router.get('/stats/summary', authenticateToken, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

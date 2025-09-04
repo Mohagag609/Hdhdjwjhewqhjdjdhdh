@@ -1,5 +1,7 @@
-const { Pool } = require('pg');
-require('dotenv').config();
+import { Pool } from 'pg';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const dbConfig = {
   host: process.env.DB_HOST || 'localhost',
@@ -33,4 +35,4 @@ const testConnection = async () => {
 // تشغيل اختبار الاتصال عند بدء التطبيق
 testConnection();
 
-module.exports = pool;
+export default pool;

@@ -1,7 +1,13 @@
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
-require('dotenv').config();
+import express from 'express';
+import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -14,11 +20,17 @@ app.use(cors({
 app.use(express.json());
 
 // API Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/vaults', require('./routes/vaults'));
-app.use('/api/projects', require('./routes/projects'));
-app.use('/api/reports', require('./routes/reports'));
-app.use('/api/users', require('./routes/users'));
+import authRoutes from './routes/auth.js';
+import vaultRoutes from './routes/vaults.js';
+import projectRoutes from './routes/projects.js';
+import reportRoutes from './routes/reports.js';
+import userRoutes from './routes/users.js';
+
+app.use('/api/auth', authRoutes);
+app.use('/api/vaults', vaultRoutes);
+app.use('/api/projects', projectRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/users', userRoutes);
 
 // Serve static files from the React app build directory
 app.use(express.static(path.join(__dirname, 'dist')));

@@ -1,5 +1,5 @@
-const jwt = require('jsonwebtoken');
-const pool = require('../config/database');
+import jwt from 'jsonwebtoken';
+import pool from '../config/database.js';
 
 // التحقق من صحة التوكن
 const authenticateToken = async (req, res, next) => {
@@ -61,7 +61,7 @@ const requireUserOrAdmin = (req, res, next) => {
   next();
 };
 
-module.exports = {
+export {
   authenticateToken,
   requireAdmin,
   requireUserOrAdmin
