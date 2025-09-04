@@ -57,6 +57,16 @@ def hash_password(password):
     """تشفير كلمة المرور"""
     return hashlib.sha256(password.encode()).hexdigest()
 
+def verify_password(stored_password, provided_password):
+    """التحقق من كلمة المرور"""
+    # إذا كانت كلمة المرور مشفرة بـ bcrypt
+    if stored_password.startswith('$2y$'):
+        import bcrypt
+        return bcrypt.checkpw(provided_password.encode('utf-8'), stored_password.encode('utf-8'))
+    # إذا كانت مشفرة بـ SHA-256
+    else:
+        return stored_password == hash_password(provided_password)
+
 def generate_transaction_number():
     """إنشاء رقم معاملة فريد"""
     timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
@@ -85,7 +95,7 @@ def login():
     ).fetchone()
     conn.close()
     
-    if user and user['password'] == hash_password(password):
+    if user and verify_password(user['password'], password):
         session['user_id'] = user['id']
         session['username'] = user['username']
         session['full_name'] = user['full_name']
