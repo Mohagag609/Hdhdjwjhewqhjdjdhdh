@@ -114,35 +114,10 @@ def dashboard():
 def treasuries():
     return render_template('treasuries.html')
 
-@app.route('/customers')
-@login_required
-def customers():
-    return render_template('customers.html')
-
-@app.route('/suppliers')
-@login_required
-def suppliers():
-    return render_template('suppliers.html')
-
-@app.route('/products')
-@login_required
-def products():
-    return render_template('products.html')
-
-@app.route('/invoices')
-@login_required
-def invoices():
-    return render_template('invoices.html')
-
 @app.route('/transactions')
 @login_required
 def transactions():
     return render_template('transactions.html')
-
-@app.route('/inventory')
-@login_required
-def inventory():
-    return render_template('inventory.html')
 
 @app.route('/reports')
 @login_required
@@ -260,168 +235,6 @@ def api_add_treasury():
         conn.close()
         return jsonify({'error': f'خطأ في إضافة الخزينة: {str(e)}'}), 500
 
-# APIs للعملاء
-@app.route('/api/customers')
-@login_required
-def api_get_customers():
-    conn = get_db_connection()
-    customers = conn.execute('''
-        SELECT c.*, 
-               (SELECT COUNT(*) FROM invoices WHERE customer_id = c.id) as invoices_count,
-               (SELECT COALESCE(SUM(remaining_amount), 0) FROM invoices WHERE customer_id = c.id AND status != 'paid') as total_debt
-        FROM customers c
-        WHERE c.is_active = 1
-        ORDER BY c.name
-    ''').fetchall()
-    conn.close()
-    
-    return jsonify({
-        'success': True,
-        'data': [dict(customer) for customer in customers]
-    })
-
-@app.route('/api/customers', methods=['POST'])
-@login_required
-def api_add_customer():
-    data = request.get_json()
-    
-    if not data.get('name'):
-        return jsonify({'error': 'اسم العميل مطلوب'}), 400
-    
-    conn = get_db_connection()
-    try:
-        conn.execute('''
-            INSERT INTO customers (name, email, phone, address, credit_limit)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (
-            data['name'],
-            data.get('email', ''),
-            data.get('phone', ''),
-            data.get('address', ''),
-            data.get('credit_limit', 0)
-        ))
-        
-        customer_id = conn.lastrowid
-        conn.commit()
-        
-        log_activity('إضافة عميل', 'customers', customer_id, None, data)
-        
-        conn.close()
-        return jsonify({'success': True, 'message': 'تم إضافة العميل بنجاح'})
-    except Exception as e:
-        conn.close()
-        return jsonify({'error': f'خطأ في إضافة العميل: {str(e)}'}), 500
-
-# APIs للموردين
-@app.route('/api/suppliers')
-@login_required
-def api_get_suppliers():
-    conn = get_db_connection()
-    suppliers = conn.execute('''
-        SELECT s.*, 
-               (SELECT COUNT(*) FROM invoices WHERE supplier_id = s.id) as invoices_count,
-               (SELECT COALESCE(SUM(remaining_amount), 0) FROM invoices WHERE supplier_id = s.id AND status != 'paid') as total_debt
-        FROM suppliers s
-        WHERE s.is_active = 1
-        ORDER BY s.name
-    ''').fetchall()
-    conn.close()
-    
-    return jsonify({
-        'success': True,
-        'data': [dict(supplier) for supplier in suppliers]
-    })
-
-@app.route('/api/suppliers', methods=['POST'])
-@login_required
-def api_add_supplier():
-    data = request.get_json()
-    
-    if not data.get('name'):
-        return jsonify({'error': 'اسم المورد مطلوب'}), 400
-    
-    conn = get_db_connection()
-    try:
-        conn.execute('''
-            INSERT INTO suppliers (name, email, phone, address, credit_limit)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (
-            data['name'],
-            data.get('email', ''),
-            data.get('phone', ''),
-            data.get('address', ''),
-            data.get('credit_limit', 0)
-        ))
-        
-        supplier_id = conn.lastrowid
-        conn.commit()
-        
-        log_activity('إضافة مورد', 'suppliers', supplier_id, None, data)
-        
-        conn.close()
-        return jsonify({'success': True, 'message': 'تم إضافة المورد بنجاح'})
-    except Exception as e:
-        conn.close()
-        return jsonify({'error': f'خطأ في إضافة المورد: {str(e)}'}), 500
-
-# APIs للمنتجات
-@app.route('/api/products')
-@login_required
-def api_get_products():
-    conn = get_db_connection()
-    products = conn.execute('''
-        SELECT p.*, 
-               CASE 
-                   WHEN p.stock_quantity <= p.min_stock_level THEN 'low_stock'
-                   WHEN p.stock_quantity = 0 THEN 'out_of_stock'
-                   ELSE 'in_stock'
-               END as stock_status
-        FROM products p
-        WHERE p.is_active = 1
-        ORDER BY p.name
-    ''').fetchall()
-    conn.close()
-    
-    return jsonify({
-        'success': True,
-        'data': [dict(product) for product in products]
-    })
-
-@app.route('/api/products', methods=['POST'])
-@login_required
-def api_add_product():
-    data = request.get_json()
-    
-    if not data.get('name'):
-        return jsonify({'error': 'اسم المنتج مطلوب'}), 400
-    
-    conn = get_db_connection()
-    try:
-        conn.execute('''
-            INSERT INTO products (name, description, sku, category, unit_price, cost_price, stock_quantity, min_stock_level, unit)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            data['name'],
-            data.get('description', ''),
-            data.get('sku', ''),
-            data.get('category', ''),
-            data.get('unit_price', 0),
-            data.get('cost_price', 0),
-            data.get('stock_quantity', 0),
-            data.get('min_stock_level', 0),
-            data.get('unit', 'piece')
-        ))
-        
-        product_id = conn.lastrowid
-        conn.commit()
-        
-        log_activity('إضافة منتج', 'products', product_id, None, data)
-        
-        conn.close()
-        return jsonify({'success': True, 'message': 'تم إضافة المنتج بنجاح'})
-    except Exception as e:
-        conn.close()
-        return jsonify({'error': f'خطأ في إضافة المنتج: {str(e)}'}), 500
 
 # APIs للمعاملات
 @app.route('/api/transactions')
@@ -433,14 +246,10 @@ def api_get_transactions():
     transactions = conn.execute('''
         SELECT t.*, 
                tr.name as treasury_name,
-               u.full_name as user_name,
-               c.name as customer_name,
-               s.name as supplier_name
+               u.full_name as user_name
         FROM transactions t
         LEFT JOIN treasuries tr ON t.treasury_id = tr.id
         LEFT JOIN users u ON t.user_id = u.id
-        LEFT JOIN customers c ON t.customer_id = c.id
-        LEFT JOIN suppliers s ON t.supplier_id = s.id
         ORDER BY t.transaction_date DESC
         LIMIT 100
     ''').fetchall()
@@ -467,8 +276,8 @@ def api_add_transaction():
     try:
         # إضافة المعاملة
         conn.execute('''
-            INSERT INTO transactions (type, amount, description, reference, treasury_id, user_id, customer_id, supplier_id, transaction_date)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO transactions (type, amount, description, reference, treasury_id, user_id, transaction_date)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         ''', (
             data['type'],
             data['amount'],
@@ -476,8 +285,6 @@ def api_add_transaction():
             data.get('reference', ''),
             data['treasury_id'],
             session['user_id'],
-            data.get('customer_id'),
-            data.get('supplier_id'),
             data.get('transaction_date', datetime.now())
         ))
         
@@ -531,28 +338,16 @@ def api_dashboard_stats():
         WHERE type = 'expense' AND transaction_date >= ?
     ''', (thirty_days_ago,)).fetchone()['total']
     
-    # عدد العملاء
-    customers_count = conn.execute('SELECT COUNT(*) as count FROM customers WHERE is_active = 1').fetchone()['count']
+    # عدد الخزائن
+    treasuries_count = conn.execute('SELECT COUNT(*) as count FROM treasuries WHERE is_active = 1').fetchone()['count']
     
-    # عدد الموردين
-    suppliers_count = conn.execute('SELECT COUNT(*) as count FROM suppliers WHERE is_active = 1').fetchone()['count']
-    
-    # عدد المنتجات
-    products_count = conn.execute('SELECT COUNT(*) as count FROM products WHERE is_active = 1').fetchone()['count']
-    
-    # المنتجات منخفضة المخزون
-    low_stock_products = conn.execute('''
+    # عدد المعاملات اليوم
+    today = date.today()
+    today_transactions = conn.execute('''
         SELECT COUNT(*) as count 
-        FROM products 
-        WHERE is_active = 1 AND stock_quantity <= min_stock_level
-    ''').fetchone()['count']
-    
-    # الفواتير المعلقة
-    pending_invoices = conn.execute('''
-        SELECT COUNT(*) as count 
-        FROM invoices 
-        WHERE status IN ('pending', 'partial')
-    ''').fetchone()['count']
+        FROM transactions 
+        WHERE DATE(transaction_date) = ?
+    ''', (today,)).fetchone()['count']
     
     conn.close()
     
@@ -563,11 +358,8 @@ def api_dashboard_stats():
             'total_income': total_income,
             'total_expenses': total_expenses,
             'net_profit': total_income - total_expenses,
-            'customers_count': customers_count,
-            'suppliers_count': suppliers_count,
-            'products_count': products_count,
-            'low_stock_products': low_stock_products,
-            'pending_invoices': pending_invoices
+            'treasuries_count': treasuries_count,
+            'today_transactions': today_transactions
         }
     })
 

@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>التقارير - نظام الخزنة الاحترافي</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: #f8fafc;
+            direction: rtl;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-details {
+            text-align: right;
+        }
+
+        .user-name {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .user-role {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: white;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            padding-top: 100px;
+            z-index: 999;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(100%);
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 0 20px;
+        }
+
+        .nav-item {
+            margin-bottom: 5px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 20px;
+            color: #4a5568;
+            text-decoration: none;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transform: translateX(-5px);
+        }
+
+        .nav-link i {
+            font-size: 18px;
+            width: 20px;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-right: 280px;
+            padding: 30px;
+            min-height: calc(100vh - 100px);
+            transition: margin-right 0.3s ease;
+        }
+
+        .main-content.expanded {
+            margin-right: 0;
+        }
+
+        .page-title {
+            font-size: 36px;
+            color: #2d3748;
+            margin-bottom: 30px;
+            font-weight: 700;
+        }
+
+        /* Reports Grid */
+        .reports-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .report-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .report-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .report-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            transform: translate(30px, -30px);
+            opacity: 0.1;
+        }
+
+        .report-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .report-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        .report-icon.balance { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .report-icon.income { background: linear-gradient(135deg, #48bb78, #38a169); }
+        .report-icon.expense { background: linear-gradient(135deg, #f56565, #e53e3e); }
+        .report-icon.transactions { background: linear-gradient(135deg, #9f7aea, #805ad5); }
+        .report-icon.treasuries { background: linear-gradient(135deg, #4299e1, #3182ce); }
+        .report-icon.export { background: linear-gradient(135deg, #ed8936, #dd6b20); }
+
+        .report-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .report-description {
+            color: #718096;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .report-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .report-btn {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .report-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .report-btn.primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .report-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Summary Cards */
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .summary-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .summary-label {
+            color: #718096;
+            font-weight: 600;
+        }
+
+        .summary-card.positive .summary-value {
+            color: #38a169;
+        }
+
+        .summary-card.negative .summary-value {
+            color: #e53e3e;
+        }
+
+        /* Date Filters */
+        .date-filters {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .filters-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 20px;
+        }
+
+        .filters-row {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 14px;
+        }
+
+        .filter-input {
+            padding: 10px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .filter-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(100%);
+            }
+            
+            .main-content {
+                margin-right: 0;
+            }
+            
+            .reports-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filters-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-vault"></i>
+                نظام الخزنة الاحترافي
+            </div>
+            <div class="user-info">
+                <div class="user-details">
+                    <div class="user-name" id="userName">المستخدم</div>
+                    <div class="user-role" id="userRole">مدير</div>
+                </div>
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    تسجيل الخروج
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="/dashboard" class="nav-link">
+                    <i class="fas fa-tachometer-alt"></i>
+                    لوحة التحكم
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/treasuries" class="nav-link">
+                    <i class="fas fa-vault"></i>
+                    إدارة الخزائن
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/transactions" class="nav-link">
+                    <i class="fas fa-exchange-alt"></i>
+                    المعاملات
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/reports" class="nav-link active">
+                    <i class="fas fa-chart-line"></i>
+                    التقارير
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/settings" class="nav-link">
+                    <i class="fas fa-cog"></i>
+                    الإعدادات
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <h1 class="page-title">التقارير والإحصائيات</h1>
+        
+        <!-- Date Filters -->
+        <div class="date-filters">
+            <h3 class="filters-title">فلاتر التاريخ</h3>
+            <div class="filters-row">
+                <div class="filter-group">
+                    <label class="filter-label">من تاريخ</label>
+                    <input type="date" class="filter-input" id="startDate">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">إلى تاريخ</label>
+                    <input type="date" class="filter-input" id="endDate">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">&nbsp;</label>
+                    <button class="filter-btn" onclick="applyFilters()">
+                        <i class="fas fa-filter"></i>
+                        تطبيق الفلاتر
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="summary-cards" id="summaryCards">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>جاري تحميل البيانات...</p>
+            </div>
+        </div>
+
+        <!-- Reports Grid -->
+        <div class="reports-grid">
+            <div class="report-card" onclick="generateBalanceReport()">
+                <div class="report-header">
+                    <div class="report-icon balance">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div>
+                        <h3 class="report-title">تقرير الأرصدة</h3>
+                        <p class="report-description">عرض أرصدة جميع الخزائن</p>
+                    </div>
+                </div>
+                <div class="report-actions">
+                    <button class="report-btn primary">
+                        <i class="fas fa-eye"></i>
+                        عرض التقرير
+                    </button>
+                </div>
+            </div>
+
+            <div class="report-card" onclick="generateIncomeReport()">
+                <div class="report-header">
+                    <div class="report-icon income">
+                        <i class="fas fa-arrow-up"></i>
+                    </div>
+                    <div>
+                        <h3 class="report-title">تقرير الإيرادات</h3>
+                        <p class="report-description">تقرير مفصل عن جميع الإيرادات</p>
+                    </div>
+                </div>
+                <div class="report-actions">
+                    <button class="report-btn primary">
+                        <i class="fas fa-chart-line"></i>
+                        عرض التقرير
+                    </button>
+                </div>
+            </div>
+
+            <div class="report-card" onclick="generateExpenseReport()">
+                <div class="report-header">
+                    <div class="report-icon expense">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                    <div>
+                        <h3 class="report-title">تقرير المصروفات</h3>
+                        <p class="report-description">تقرير مفصل عن جميع المصروفات</p>
+                    </div>
+                </div>
+                <div class="report-actions">
+                    <button class="report-btn primary">
+                        <i class="fas fa-chart-bar"></i>
+                        عرض التقرير
+                    </button>
+                </div>
+            </div>
+
+            <div class="report-card" onclick="generateTransactionsReport()">
+                <div class="report-header">
+                    <div class="report-icon transactions">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                    <div>
+                        <h3 class="report-title">تقرير المعاملات</h3>
+                        <p class="report-description">تقرير شامل لجميع المعاملات</p>
+                    </div>
+                </div>
+                <div class="report-actions">
+                    <button class="report-btn primary">
+                        <i class="fas fa-list"></i>
+                        عرض التقرير
+                    </button>
+                </div>
+            </div>
+
+            <div class="report-card" onclick="generateTreasuriesReport()">
+                <div class="report-header">
+                    <div class="report-icon treasuries">
+                        <i class="fas fa-vault"></i>
+                    </div>
+                    <div>
+                        <h3 class="report-title">تقرير الخزائن</h3>
+                        <p class="report-description">تقرير حالة جميع الخزائن</p>
+                    </div>
+                </div>
+                <div class="report-actions">
+                    <button class="report-btn primary">
+                        <i class="fas fa-database"></i>
+                        عرض التقرير
+                    </button>
+                </div>
+            </div>
+
+            <div class="report-card" onclick="exportData()">
+                <div class="report-header">
+                    <div class="report-icon export">
+                        <i class="fas fa-download"></i>
+                    </div>
+                    <div>
+                        <h3 class="report-title">تصدير البيانات</h3>
+                        <p class="report-description">تصدير البيانات بصيغة Excel</p>
+                    </div>
+                </div>
+                <div class="report-actions">
+                    <button class="report-btn primary">
+                        <i class="fas fa-file-excel"></i>
+                        تصدير
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // تحميل البيانات عند فتح الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSummaryData();
+            loadUserInfo();
+            setDefaultDates();
+        });
+
+        // تعيين التواريخ الافتراضية
+        function setDefaultDates() {
+            const today = new Date();
+            const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
+            
+            document.getElementById('startDate').value = thirtyDaysAgo.toISOString().split('T')[0];
+            document.getElementById('endDate').value = today.toISOString().split('T')[0];
+        }
+
+        // تحميل بيانات الملخص
+        async function loadSummaryData() {
+            try {
+                const response = await fetch('/api/dashboard/stats');
+                const data = await response.json();
+                
+                if (data.success) {
+                    displaySummaryCards(data.data);
+                } else {
+                    showError('خطأ في تحميل البيانات');
+                }
+            } catch (error) {
+                console.error('Error loading summary data:', error);
+                showError('خطأ في الاتصال بالخادم');
+            }
+        }
+
+        // عرض بطاقات الملخص
+        function displaySummaryCards(data) {
+            const container = document.getElementById('summaryCards');
+            
+            container.innerHTML = `
+                <div class="summary-card">
+                    <div class="summary-value">${formatCurrency(data.total_balance)}</div>
+                    <div class="summary-label">إجمالي الأرصدة</div>
+                </div>
+                <div class="summary-card positive">
+                    <div class="summary-value">${formatCurrency(data.total_income)}</div>
+                    <div class="summary-label">إجمالي الإيرادات</div>
+                </div>
+                <div class="summary-card negative">
+                    <div class="summary-value">${formatCurrency(data.total_expenses)}</div>
+                    <div class="summary-label">إجمالي المصروفات</div>
+                </div>
+                <div class="summary-card ${data.net_profit >= 0 ? 'positive' : 'negative'}">
+                    <div class="summary-value">${formatCurrency(data.net_profit)}</div>
+                    <div class="summary-label">صافي الربح</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-value">${data.treasuries_count}</div>
+                    <div class="summary-label">عدد الخزائن</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-value">${data.today_transactions}</div>
+                    <div class="summary-label">معاملات اليوم</div>
+                </div>
+            `;
+        }
+
+        // تطبيق الفلاتر
+        function applyFilters() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            if (!startDate || !endDate) {
+                showError('يرجى اختيار تاريخ البداية والنهاية');
+                return;
+            }
+            
+            if (new Date(startDate) > new Date(endDate)) {
+                showError('تاريخ البداية يجب أن يكون قبل تاريخ النهاية');
+                return;
+            }
+            
+            // يمكن إضافة منطق تطبيق الفلاتر هنا
+            showSuccess('تم تطبيق الفلاتر بنجاح');
+        }
+
+        // توليد تقرير الأرصدة
+        function generateBalanceReport() {
+            showSuccess('تم توليد تقرير الأرصدة');
+            // يمكن إضافة منطق توليد التقرير هنا
+        }
+
+        // توليد تقرير الإيرادات
+        function generateIncomeReport() {
+            showSuccess('تم توليد تقرير الإيرادات');
+            // يمكن إضافة منطق توليد التقرير هنا
+        }
+
+        // توليد تقرير المصروفات
+        function generateExpenseReport() {
+            showSuccess('تم توليد تقرير المصروفات');
+            // يمكن إضافة منطق توليد التقرير هنا
+        }
+
+        // توليد تقرير المعاملات
+        function generateTransactionsReport() {
+            showSuccess('تم توليد تقرير المعاملات');
+            // يمكن إضافة منطق توليد التقرير هنا
+        }
+
+        // توليد تقرير الخزائن
+        function generateTreasuriesReport() {
+            showSuccess('تم توليد تقرير الخزائن');
+            // يمكن إضافة منطق توليد التقرير هنا
+        }
+
+        // تصدير البيانات
+        function exportData() {
+            showSuccess('تم بدء تصدير البيانات');
+            // يمكن إضافة منطق التصدير هنا
+        }
+
+        // تنسيق العملة
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('ar-SA', {
+                style: 'currency',
+                currency: 'SAR'
+            }).format(amount);
+        }
+
+        // تحميل معلومات المستخدم
+        async function loadUserInfo() {
+            // يمكن إضافة تحميل معلومات المستخدم هنا
+        }
+
+        // تسجيل الخروج
+        async function logout() {
+            try {
+                await fetch('/api/logout', { method: 'POST' });
+                window.location.href = '/login';
+            } catch (error) {
+                console.error('Error logging out:', error);
+                window.location.href = '/login';
+            }
+        }
+
+        // إظهار رسالة نجاح
+        function showSuccess(message) {
+            // يمكن إضافة نظام إشعارات هنا
+            alert(message);
+        }
+
+        // إظهار رسالة خطأ
+        function showError(message) {
+            // يمكن إضافة نظام إشعارات هنا
+            alert(message);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المعاملات - نظام الخزنة الاحترافي</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: #f8fafc;
+            direction: rtl;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-details {
+            text-align: right;
+        }
+
+        .user-name {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .user-role {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: white;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            padding-top: 100px;
+            z-index: 999;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(100%);
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 0 20px;
+        }
+
+        .nav-item {
+            margin-bottom: 5px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 20px;
+            color: #4a5568;
+            text-decoration: none;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transform: translateX(-5px);
+        }
+
+        .nav-link i {
+            font-size: 18px;
+            width: 20px;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-right: 280px;
+            padding: 30px;
+            min-height: calc(100vh - 100px);
+            transition: margin-right 0.3s ease;
+        }
+
+        .main-content.expanded {
+            margin-right: 0;
+        }
+
+        .page-title {
+            font-size: 36px;
+            color: #2d3748;
+            margin-bottom: 30px;
+            font-weight: 700;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 20px 12px 50px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-box i {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+        }
+
+        .add-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Transactions Table */
+        .transactions-table {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .table-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px 30px;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th {
+            background: #f8fafc;
+            padding: 20px;
+            text-align: right;
+            font-weight: 600;
+            color: #4a5568;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .table td {
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: middle;
+        }
+
+        .table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .transaction-type {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .transaction-type.income {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .transaction-type.expense {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .transaction-type.transfer {
+            background: #bee3f8;
+            color: #2a4365;
+        }
+
+        .amount {
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .amount.positive {
+            color: #38a169;
+        }
+
+        .amount.negative {
+            color: #e53e3e;
+        }
+
+        .treasury-name {
+            background: #e6fffa;
+            color: #234e52;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .transaction-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .action-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .action-btn.delete {
+            background: rgba(229, 62, 62, 0.1);
+            color: #e53e3e;
+        }
+
+        .action-btn.delete:hover {
+            background: #e53e3e;
+            color: white;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 25px 30px;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .close {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .close:hover {
+            opacity: 0.7;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            background-color: white;
+            cursor: pointer;
+        }
+
+        .modal-footer {
+            padding: 20px 30px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(100%);
+            }
+            
+            .main-content {
+                margin-right: 0;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .table {
+                font-size: 14px;
+            }
+
+            .table th,
+            .table td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-vault"></i>
+                نظام الخزنة الاحترافي
+            </div>
+            <div class="user-info">
+                <div class="user-details">
+                    <div class="user-name" id="userName">المستخدم</div>
+                    <div class="user-role" id="userRole">مدير</div>
+                </div>
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    تسجيل الخروج
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="/dashboard" class="nav-link">
+                    <i class="fas fa-tachometer-alt"></i>
+                    لوحة التحكم
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/treasuries" class="nav-link">
+                    <i class="fas fa-vault"></i>
+                    إدارة الخزائن
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/transactions" class="nav-link active">
+                    <i class="fas fa-exchange-alt"></i>
+                    المعاملات
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/reports" class="nav-link">
+                    <i class="fas fa-chart-line"></i>
+                    التقارير
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/settings" class="nav-link">
+                    <i class="fas fa-cog"></i>
+                    الإعدادات
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <h1 class="page-title">المعاملات المالية</h1>
+        
+        <!-- Controls -->
+        <div class="controls">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="البحث في المعاملات...">
+            </div>
+            <button class="add-btn" onclick="showAddTransactionModal()">
+                <i class="fas fa-plus"></i>
+                إضافة معاملة
+            </button>
+        </div>
+
+        <!-- Transactions Table -->
+        <div class="transactions-table">
+            <div class="table-header">
+                <i class="fas fa-exchange-alt"></i>
+                قائمة المعاملات
+            </div>
+            <div id="transactionsTable">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>جاري تحميل المعاملات...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Transaction Modal -->
+    <div id="addTransactionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">إضافة معاملة جديدة</h2>
+                <span class="close" onclick="closeModal('addTransactionModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="addTransactionForm">
+                    <div class="form-group">
+                        <label class="form-label">نوع المعاملة *</label>
+                        <select class="form-select" id="transactionType" required>
+                            <option value="">اختر نوع المعاملة</option>
+                            <option value="income">إيراد</option>
+                            <option value="expense">مصروف</option>
+                            <option value="transfer">تحويل</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">المبلغ *</label>
+                        <input type="number" class="form-input" id="amount" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">الخزينة *</label>
+                        <select class="form-select" id="treasuryId" required>
+                            <option value="">اختر الخزينة</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">الوصف *</label>
+                        <textarea class="form-input form-textarea" id="description" required placeholder="وصف المعاملة..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">المرجع</label>
+                        <input type="text" class="form-input" id="reference" placeholder="رقم المرجع أو الوثيقة...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">تاريخ المعاملة</label>
+                        <input type="datetime-local" class="form-input" id="transactionDate">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addTransactionModal')">إلغاء</button>
+                <button type="button" class="btn btn-primary" onclick="addTransaction()">إضافة المعاملة</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // تحميل البيانات عند فتح الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTransactions();
+            loadUserInfo();
+        });
+
+        // تحميل المعاملات
+        async function loadTransactions() {
+            try {
+                const response = await fetch('/api/transactions');
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayTransactions(data.data);
+                } else {
+                    showError('خطأ في تحميل المعاملات');
+                }
+            } catch (error) {
+                console.error('Error loading transactions:', error);
+                showError('خطأ في الاتصال بالخادم');
+            }
+        }
+
+        // عرض المعاملات
+        function displayTransactions(transactions) {
+            const table = document.getElementById('transactionsTable');
+            
+            if (transactions.length === 0) {
+                table.innerHTML = `
+                    <div style="text-align: center; padding: 60px; color: #718096;">
+                        <i class="fas fa-exchange-alt" style="font-size: 64px; margin-bottom: 20px; opacity: 0.3;"></i>
+                        <h3>لا توجد معاملات</h3>
+                        <p>ابدأ بإضافة معاملة جديدة</p>
+                    </div>
+                `;
+                return;
+            }
+
+            table.innerHTML = `
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>التاريخ</th>
+                            <th>النوع</th>
+                            <th>المبلغ</th>
+                            <th>الوصف</th>
+                            <th>الخزينة</th>
+                            <th>المستخدم</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${transactions.map(transaction => `
+                            <tr>
+                                <td>${formatDate(transaction.transaction_date)}</td>
+                                <td>
+                                    <span class="transaction-type ${transaction.type}">
+                                        ${getTransactionTypeText(transaction.type)}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="amount ${transaction.type === 'income' ? 'positive' : 'negative'}">
+                                        ${transaction.type === 'income' ? '+' : '-'}${formatCurrency(transaction.amount)}
+                                    </span>
+                                </td>
+                                <td>${transaction.description}</td>
+                                <td>
+                                    <span class="treasury-name">${transaction.treasury_name}</span>
+                                </td>
+                                <td>${transaction.user_name}</td>
+                                <td>
+                                    <div class="transaction-actions">
+                                        <button class="action-btn" onclick="editTransaction(${transaction.id})" title="تعديل">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="action-btn delete" onclick="deleteTransaction(${transaction.id})" title="حذف">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // إظهار نافذة إضافة معاملة
+        async function showAddTransactionModal() {
+            // تحميل الخزائن للقائمة المنسدلة
+            try {
+                const response = await fetch('/api/treasuries');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const select = document.getElementById('treasuryId');
+                    select.innerHTML = '<option value="">اختر الخزينة</option>';
+                    data.data.forEach(treasury => {
+                        select.innerHTML += `<option value="${treasury.id}">${treasury.name}</option>`;
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading treasuries for dropdown:', error);
+            }
+            
+            // تعيين التاريخ الحالي
+            const now = new Date();
+            const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+            document.getElementById('transactionDate').value = localDateTime;
+            
+            document.getElementById('addTransactionModal').style.display = 'block';
+        }
+
+        // إضافة معاملة
+        async function addTransaction() {
+            const form = document.getElementById('addTransactionForm');
+            
+            const data = {
+                type: document.getElementById('transactionType').value,
+                amount: parseFloat(document.getElementById('amount').value),
+                treasury_id: document.getElementById('treasuryId').value,
+                description: document.getElementById('description').value,
+                reference: document.getElementById('reference').value,
+                transaction_date: document.getElementById('transactionDate').value || new Date().toISOString()
+            };
+
+            // التحقق من البيانات المطلوبة
+            if (!data.type || !data.amount || !data.treasury_id || !data.description) {
+                showError('جميع الحقول المطلوبة يجب ملؤها');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/transactions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showSuccess('تم إضافة المعاملة بنجاح');
+                    closeModal('addTransactionModal');
+                    form.reset();
+                    loadTransactions();
+                } else {
+                    showError(result.error || 'خطأ في إضافة المعاملة');
+                }
+            } catch (error) {
+                console.error('Error adding transaction:', error);
+                showError('خطأ في الاتصال بالخادم');
+            }
+        }
+
+        // إغلاق النافذة
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // تنسيق العملة
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('ar-SA', {
+                style: 'currency',
+                currency: 'SAR'
+            }).format(amount);
+        }
+
+        // تنسيق التاريخ
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ar-SA', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // الحصول على نص نوع المعاملة
+        function getTransactionTypeText(type) {
+            const types = {
+                'income': 'إيراد',
+                'expense': 'مصروف',
+                'transfer': 'تحويل'
+            };
+            return types[type] || type;
+        }
+
+        // تحميل معلومات المستخدم
+        async function loadUserInfo() {
+            // يمكن إضافة تحميل معلومات المستخدم هنا
+        }
+
+        // تسجيل الخروج
+        async function logout() {
+            try {
+                await fetch('/api/logout', { method: 'POST' });
+                window.location.href = '/login';
+            } catch (error) {
+                console.error('Error logging out:', error);
+                window.location.href = '/login';
+            }
+        }
+
+        // إظهار رسالة نجاح
+        function showSuccess(message) {
+            // يمكن إضافة نظام إشعارات هنا
+            alert(message);
+        }
+
+        // إظهار رسالة خطأ
+        function showError(message) {
+            // يمكن إضافة نظام إشعارات هنا
+            alert(message);
+        }
+
+        // البحث
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('.table tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+
+        // إغلاق النافذة عند النقر خارجها
+        window.onclick = function(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
