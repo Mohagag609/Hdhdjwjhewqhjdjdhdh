@@ -273,8 +273,8 @@
         }
 
         .transaction-type.transfer {
-            background: #bee3f8;
-            color: #2a4365;
+            background: #e9d8fd;
+            color: #553c9a;
         }
 
         .amount {
@@ -288,6 +288,10 @@
 
         .amount.negative {
             color: #e53e3e;
+        }
+
+        .amount.neutral {
+            color: #9f7aea;
         }
 
         .treasury-name {
@@ -755,13 +759,14 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="amount ${transaction.type === 'income' ? 'positive' : 'negative'}">
-                                        ${transaction.type === 'income' ? '+' : '-'}${formatCurrency(transaction.amount)}
+                                    <span class="amount ${transaction.type === 'income' ? 'positive' : transaction.type === 'expense' ? 'negative' : 'neutral'}">
+                                        ${transaction.type === 'income' ? '+' : transaction.type === 'expense' ? '-' : '↔'}${formatCurrency(transaction.amount)}
                                     </span>
                                 </td>
                                 <td>${transaction.description}</td>
                                 <td>
                                     <span class="treasury-name">${transaction.treasury_name}</span>
+                                    ${transaction.transfer_to_treasury_name ? `<br><small>إلى: ${transaction.transfer_to_treasury_name}</small>` : ''}
                                 </td>
                                 <td>${transaction.partner_name || '-'}</td>
                                 <td>${transaction.income_type_name || transaction.expense_type_name || '-'}</td>
@@ -898,6 +903,13 @@
                 reference: document.getElementById('reference').value,
                 transaction_date: document.getElementById('transactionDate').value || new Date().toISOString()
             };
+
+            // تنظيف البيانات - تحويل القيم الفارغة إلى null
+            Object.keys(data).forEach(key => {
+                if (data[key] === '' || data[key] === undefined) {
+                    data[key] = null;
+                }
+            });
 
             // التحقق من البيانات المطلوبة
             if (!data.type || !data.amount || !data.treasury_id || !data.description) {

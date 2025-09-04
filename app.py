@@ -426,6 +426,10 @@ def api_add_transaction():
         if not data.get(field):
             return jsonify({'error': f'الحقل {field} مطلوب'}), 400
     
+    # التحقق من التحويلات
+    if data['type'] == 'transfer' and not data.get('transfer_to_treasury_id'):
+        return jsonify({'error': 'الخزينة المستقبلة مطلوبة للتحويل'}), 400
+    
     conn = get_db_connection()
     
     try:
@@ -523,7 +527,7 @@ def api_update_transaction(transaction_id):
         # تحديث المعاملة
         conn.execute('''
             UPDATE transactions 
-            SET type = ?, amount = ?, description = ?, reference = ?, treasury_id = ?, transaction_date = ?
+            SET type = ?, amount = ?, description = ?, reference = ?, treasury_id = ?, partner_id = ?, income_type_id = ?, expense_type_id = ?, transfer_to_treasury_id = ?, transaction_date = ?
             WHERE id = ?
         ''', (
             data['type'],
@@ -531,6 +535,10 @@ def api_update_transaction(transaction_id):
             data['description'],
             data.get('reference', ''),
             data['treasury_id'],
+            data.get('partner_id'),
+            data.get('income_type_id'),
+            data.get('expense_type_id'),
+            data.get('transfer_to_treasury_id'),
             data.get('transaction_date', datetime.now()),
             transaction_id
         ))
