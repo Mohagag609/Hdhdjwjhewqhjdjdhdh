@@ -172,101 +172,9 @@ def check_auth():
         })
     return jsonify({'authenticated': False})
 
-# API للوحة التحكم
-@app.route('/api/dashboard/stats', methods=['GET'])
-@login_required
-def get_dashboard_stats():
-    conn = get_db_connection()
-    
-    # إجمالي النقدية
-    total_cash = conn.execute(
-        'SELECT SUM(current_balance) as total FROM treasuries WHERE is_active = 1'
-    ).fetchone()['total'] or 0
-    
-    # الشيكات المستحقة
-    due_checks = conn.execute(
-        'SELECT COUNT(*) as count FROM checks WHERE due_date <= date("now") AND status = "pending"'
-    ).fetchone()['count']
-    
-    # المبيعات اليوم
-    today_sales = conn.execute(
-        'SELECT COALESCE(SUM(amount), 0) as total FROM cash_transactions WHERE type = "receipt" AND transaction_date = date("now")'
-    ).fetchone()['total']
-    
-    # المصروفات اليوم
-    today_expenses = conn.execute(
-        'SELECT COALESCE(SUM(amount), 0) as total FROM cash_transactions WHERE type = "payment" AND transaction_date = date("now")'
-    ).fetchone()['total']
-    
-    conn.close()
-    
-    return jsonify({
-        'total_cash': float(total_cash),
-        'due_checks': due_checks,
-        'today_sales': float(today_sales),
-        'today_expenses': float(today_expenses)
-    })
+# API للوحة التحكم القديم - تم حذفه لاستبداله بالنسخة المحسنة
 
-# API للمعاملات النقدية
-@app.route('/api/cash/transactions', methods=['GET'])
-@login_required
-def get_cash_transactions():
-    conn = get_db_connection()
-    
-    transactions = conn.execute('''
-        SELECT ct.*, t.name as treasury_name, p.name as party_name
-        FROM cash_transactions ct
-        LEFT JOIN treasuries t ON ct.treasury_id = t.id
-        LEFT JOIN parties p ON ct.party_id = p.id
-        ORDER BY ct.transaction_date DESC, ct.created_at DESC
-    ''').fetchall()
-    
-    conn.close()
-    
-    return jsonify([dict(transaction) for transaction in transactions])
-
-@app.route('/api/cash/transactions', methods=['POST'])
-@login_required
-def add_cash_transaction():
-    data = request.get_json()
-    
-    # التحقق من البيانات المطلوبة
-    required_fields = ['type', 'amount', 'description', 'treasury_id', 'transaction_date']
-    for field in required_fields:
-        if field not in data:
-            return jsonify({'error': f'الحقل {field} مطلوب'}), 400
-    
-    conn = get_db_connection()
-    
-    try:
-        # إنشاء رقم المعاملة
-        transaction_number = generate_transaction_number()
-        
-        # إدراج المعاملة
-        conn.execute('''
-            INSERT INTO cash_transactions 
-            (transaction_number, type, amount, description, treasury_id, party_id, transaction_date, created_by)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            transaction_number,
-            data['type'],
-            data['amount'],
-            data['description'],
-            data['treasury_id'],
-            data.get('party_id'),
-            data['transaction_date'],
-            session['user_id']
-        ))
-        
-        conn.commit()
-        conn.close()
-        
-        return jsonify({'success': True, 'message': 'تم إضافة المعاملة بنجاح'})
-        
-    except Exception as e:
-        conn.rollback()
-        conn.close()
-        return jsonify({'error': f'خطأ في إضافة المعاملة: {str(e)}'}), 500
+# API للمعاملات النقدية القديم - تم حذفه لاستبداله بالنسخة المحسنة
 
 # API للشيكات
 @app.route('/api/checks', methods=['GET'])
@@ -328,69 +236,9 @@ def add_check():
         conn.close()
         return jsonify({'error': f'خطأ في إضافة الشيك: {str(e)}'}), 500
 
-# API للخزائن
-@app.route('/api/treasuries', methods=['GET'])
-@login_required
-def get_treasuries():
-    conn = get_db_connection()
-    
-    treasuries = conn.execute('''
-        SELECT * FROM treasury_balances WHERE is_active = 1
-        ORDER BY name
-    ''').fetchall()
-    
-    conn.close()
-    
-    return jsonify([dict(treasury) for treasury in treasuries])
+# API للخزائن القديم - تم حذفه لاستبداله بالنسخة المحسنة
 
-# API للأطراف (العملاء والموردين)
-@app.route('/api/parties', methods=['GET'])
-@login_required
-def get_parties():
-    conn = get_db_connection()
-    
-    parties = conn.execute('''
-        SELECT * FROM parties WHERE is_active = 1
-        ORDER BY name
-    ''').fetchall()
-    
-    conn.close()
-    
-    return jsonify([dict(party) for party in parties])
-
-@app.route('/api/parties', methods=['POST'])
-@login_required
-def add_party():
-    data = request.get_json()
-    
-    required_fields = ['name', 'type']
-    for field in required_fields:
-        if field not in data:
-            return jsonify({'error': f'الحقل {field} مطلوب'}), 400
-    
-    conn = get_db_connection()
-    
-    try:
-        conn.execute('''
-            INSERT INTO parties (name, type, phone, email, address)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (
-            data['name'],
-            data['type'],
-            data.get('phone', ''),
-            data.get('email', ''),
-            data.get('address', '')
-        ))
-        
-        conn.commit()
-        conn.close()
-        
-        return jsonify({'success': True, 'message': 'تم إضافة الطرف بنجاح'})
-        
-    except Exception as e:
-        conn.rollback()
-        conn.close()
-        return jsonify({'error': f'خطأ في إضافة الطرف: {str(e)}'}), 500
+# API للأطراف القديم - تم حذفه لاستبداله بالنسخة المحسنة
 
 # API للتقارير
 @app.route('/api/reports/daily', methods=['GET'])
