@@ -20,7 +20,7 @@ app.secret_key = 'treasury_professional_secret_key_2024'
 CORS(app)
 
 # إعدادات قاعدة البيانات
-DATABASE = 'database/treasury.db'
+DATABASE = 'treasury.db'
 
 def get_db_connection():
     """إنشاء اتصال بقاعدة البيانات"""
@@ -30,8 +30,6 @@ def get_db_connection():
 
 def init_database():
     """تهيئة قاعدة البيانات"""
-    os.makedirs('database', exist_ok=True)
-    
     conn = get_db_connection()
     
     try:
