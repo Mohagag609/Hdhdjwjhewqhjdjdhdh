@@ -307,8 +307,12 @@ def income_expense_report():
     )
 
 
+@app.cli.command("init-db")
+def init_db():
+    """Create new tables in the database."""
+    db.create_all()
+    print("Initialized the database.")
+
+
 if __name__ == '__main__':
-    # We will create the database tables before running the app
-    with app.app_context():
-        db.create_all()
     app.run(debug=True)
